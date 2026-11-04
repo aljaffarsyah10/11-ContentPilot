@@ -1,0 +1,163 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// --------------------------------------------------------------------------
+// Enums
+// --------------------------------------------------------------------------
+
+enum SocialPlatform {
+  INSTAGRAM
+  FACEBOOK
+  TIKTOK
+  LINKEDIN
+  X
+  YOUTUBE
+}
+
+enum ContentStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+}
+
+enum IdeaStatus {
+  NEW
+  IN_PROGRESS
+  USED
+  ARCHIVED
+}
+
+// --------------------------------------------------------------------------
+// Authentication Models (Auth.js Compatible)
+// --------------------------------------------------------------------------
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  contents      Content[]
+  ideas         ContentIdea[]
+  aiGenerations AIGeneration[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// --------------------------------------------------------------------------
+// Domain Models
+// --------------------------------------------------------------------------
+
+model Content {
+  id          String         @id @default(cuid())
+  userId      String
+  title       String         @db.VarChar(150)
+  caption     String?        @db.Text
+  hashtags    String[]       @default([])
+  platform    SocialPlatform
+  status      ContentStatus  @default(DRAFT)
+  scheduledAt DateTime?
+  notes       String?        @db.Text
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Relasi opsional ke ide asal
+  originIdeaId String?
+  originIdea   ContentIdea?  @relation(fields: [originIdeaId], references: [id], onDelete: SetNull)
+
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([userId, scheduledAt])
+  @@index([userId, platform])
+  @@map("contents")
+}
+
+model ContentIdea {
+  id          String     @id @default(cuid())
+  userId      String
+  title       String     @db.VarChar(200)
+  description String?    @db.Text
+  status      IdeaStatus @default(NEW)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  contents    Content[]
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, status])
+  @@map("content_ideas")
+}
+
+model AIGeneration {
+  id          String         @id @default(cuid())
+  userId      String
+  platform    SocialPlatform
+  topic       String         @db.VarChar(300)
+  tone        String         @db.VarChar(50)
+  language    String         @db.VarChar(20)
+  captionCount Int           @default(1)
+  createdAt   DateTime       @default(now())
+
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("ai_generations")
+}
+
