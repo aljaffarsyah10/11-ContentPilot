@@ -314,3 +314,4 @@ Daftar komponen yang dibangun berbasis `shadcn/ui` dan custom helpers:
 2. **Focus Visibility:** Menggunakan utility `focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none`.
 3. **Form Clarity:** Setiap field input memiliki `<label>` terkait secara eksplisit dan pesan error validasi diletakkan tepat di bawah field bersangkutan dengan warna teks `text-destructive text-xs`.
 4. **Destructive Actions Warning:** Seluruh aksi penghapusan (Delete Konten / Delete Ide) wajib didahului oleh dialog konfirmasi `ConfirmDialog`.
+
