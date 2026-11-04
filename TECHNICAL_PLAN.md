@@ -692,3 +692,4 @@ Berikut adalah spesifikasi file `.env`:
 | 4 | **Perbedaan Timezone pada Jadwal Kalender** | Konten tampil di tanggal/jam yang keliru antara server dan browser user | Semua data jadwal disimpan murni dalam UTC format di DB; formatting UI menggunakan timezone lokal browser client. |
 | 5 | **Database Connection Exhaustion** | Koneksi PostgreSQL habis pada concurrent serverless / handler requests | Singleton Prisma client instance pada Node.js lifecycle; konfigurasi connection pool limit pada `DATABASE_URL`. |
 | 6 | **Data Leakage Antar User** | User A dapat membaca atau mengedit konten milik User B | Enforce ownership validation (`userId: session.user.id`) pada semua query Prisma di Service Layer. |
+
