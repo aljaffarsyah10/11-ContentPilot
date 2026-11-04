@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Sidebar } from "@/components/layout/sidebar";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Menu, Plus, User, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -94,6 +95,9 @@ export function Topbar() {
           <Plus className="size-4 mr-1.5" />
           <span>Buat Konten</span>
         </Link>
+
+        {/* Theme Mode Toggle */}
+        <ThemeToggle />
 
         {/* User Dropdown */}
         <DropdownMenu>

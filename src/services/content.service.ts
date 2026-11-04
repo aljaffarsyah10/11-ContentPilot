@@ -60,6 +60,49 @@ export class ContentService {
     }
     return { id: deleted.id };
   }
+
+  async duplicateContent(id: string, userId: string) {
+    const duplicated = await contentRepository.duplicate(id, userId);
+    if (!duplicated) {
+      throw new NotFoundError("Konten tidak ditemukan atau Anda tidak memiliki akses");
+    }
+    return duplicated;
+  }
+
+  async exportContentsCsv(userId: string): Promise<string> {
+    const contents = await contentRepository.findAllForExport(userId);
+    const headers = [
+      "Title",
+      "Platform",
+      "Caption",
+      "Hashtags",
+      "Status",
+      "Scheduled Date",
+      "Created Date",
+    ];
+
+    const escapeCsvValue = (val: string | null | undefined): string => {
+      if (val === null || val === undefined) return "";
+      const str = String(val);
+      if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const rows = contents.map((c) => [
+      escapeCsvValue(c.title),
+      escapeCsvValue(c.platform),
+      escapeCsvValue(c.caption),
+      escapeCsvValue(c.hashtags.map((h) => `#${h}`).join(" ")),
+      escapeCsvValue(c.status),
+      escapeCsvValue(c.scheduledAt ? c.scheduledAt.toISOString() : ""),
+      escapeCsvValue(c.createdAt.toISOString()),
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
+    return "\uFEFF" + csvContent;
+  }
 }
 
 export const contentService = new ContentService();

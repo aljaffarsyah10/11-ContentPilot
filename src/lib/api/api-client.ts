@@ -117,6 +117,23 @@ export const api = {
       apiRequest<{ deleted: boolean }>(`/api/contents/${id}`, {
         method: "DELETE",
       }),
+    duplicate: (id: string) =>
+      apiRequest<ContentItem>(`/api/contents/${id}/duplicate`, {
+        method: "POST",
+      }),
+    downloadExportCsv: async () => {
+      const res = await fetch("/api/contents/export");
+      if (!res.ok) throw new Error("Gagal mengunduh file CSV.");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `contentpilot-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    },
   },
   ideas: {
     list: (params?: { status?: string; search?: string }) => {

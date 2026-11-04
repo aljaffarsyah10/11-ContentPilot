@@ -55,6 +55,8 @@ import {
   AlertCircle,
   RefreshCw,
   Loader2,
+  Copy,
+  Download,
 } from "lucide-react";
 
 const platforms: Array<{ label: string; value: string }> = [
@@ -80,6 +82,8 @@ export default function ContentsPage() {
   // Deletion modal state
   const [contentToDelete, setContentToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
 
   const fetchContents = useCallback(async () => {
     setIsLoading(true);
@@ -130,6 +134,33 @@ export default function ContentsPage() {
     };
   }, [selectedPlatform, selectedStatus, searchQuery]);
 
+  const handleDuplicate = async (id: string) => {
+    setDuplicatingId(id);
+    try {
+      const duplicated = await api.contents.duplicate(id);
+      toast.success(`Konten "${duplicated.title}" berhasil digandakan sebagai draf!`);
+      fetchContents();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal menggandakan konten.";
+      toast.error(msg);
+    } finally {
+      setDuplicatingId(null);
+    }
+  };
+
+  const handleExportCsv = async () => {
+    setIsExporting(true);
+    try {
+      await api.contents.downloadExportCsv();
+      toast.success("File CSV berhasil diekspor dan diunduh.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal mengekspor file CSV.";
+      toast.error(msg);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!contentToDelete) return;
     setIsDeleting(true);
@@ -163,6 +194,20 @@ export default function ContentsPage() {
         title="Daftar Konten"
         description="Kelola seluruh draft, jadwal tayang, dan materi konten media sosial Anda."
       >
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExportCsv}
+          disabled={isExporting}
+          className="cursor-pointer"
+        >
+          {isExporting ? (
+            <Loader2 className="size-4 mr-1.5 animate-spin" />
+          ) : (
+            <Download className="size-4 mr-1.5" />
+          )}
+          Export CSV
+        </Button>
         <Link
           href="/contents/new"
           className={buttonVariants({ size: "sm" })}
@@ -333,6 +378,18 @@ export default function ContentsPage() {
                             <Edit className="size-4 mr-2" />
                             <span>Edit Konten</span>
                           </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDuplicate(content.id)}
+                          disabled={duplicatingId === content.id}
+                          className="cursor-pointer"
+                        >
+                          {duplicatingId === content.id ? (
+                            <Loader2 className="size-4 mr-2 animate-spin" />
+                          ) : (
+                            <Copy className="size-4 mr-2" />
+                          )}
+                          <span>Duplikasi Konten</span>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuLabel className="text-xs text-muted-foreground">

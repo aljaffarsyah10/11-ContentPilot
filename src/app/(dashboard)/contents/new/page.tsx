@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PlatformBadge, SocialPlatform } from "@/components/shared/platform-badge";
+import { TemplatePickerDialog } from "@/components/content/template-picker-dialog";
+import { ContentTemplate } from "@/config/templates";
 import { api } from "@/lib/api/api-client";
 import { toast } from "sonner";
 import { Sparkles, ArrowLeft, Loader2, Calendar } from "lucide-react";
@@ -124,6 +126,15 @@ function NewContentForm() {
     }
   };
 
+  const handleSelectTemplate = (template: ContentTemplate) => {
+    setValue("title", template.title);
+    setValue("caption", template.caption);
+    setValue("hashtags", template.hashtags.map((h) => `#${h}`).join(" "));
+    setValue("platform", template.defaultPlatform);
+    setValue("notes", template.notes);
+    toast.success(`Template "${template.name}" berhasil diterapkan!`);
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="flex items-center gap-2">
@@ -143,7 +154,9 @@ function NewContentForm() {
       <PageHeader
         title="Buat Konten Baru"
         description="Rancang materi postingan, kelola jadwal tayang, dan pilih saluran media sosial Anda."
-      />
+      >
+        <TemplatePickerDialog onSelect={handleSelectTemplate} />
+      </PageHeader>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* Main Editor Column (8 cols) */}

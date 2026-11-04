@@ -126,6 +126,32 @@ export class ContentRepository {
       orderBy: { scheduledAt: "asc" },
     });
   }
+
+  async duplicate(id: string, userId: string) {
+    const original = await this.findById(id, userId);
+    if (!original) return null;
+
+    return prisma.content.create({
+      data: {
+        userId,
+        title: `${original.title} (Salinan)`,
+        caption: original.caption,
+        hashtags: original.hashtags,
+        platform: original.platform,
+        status: "DRAFT",
+        scheduledAt: null,
+        notes: original.notes,
+        originIdeaId: original.originIdeaId,
+      },
+    });
+  }
+
+  async findAllForExport(userId: string) {
+    return prisma.content.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+    });
+  }
 }
 
 export const contentRepository = new ContentRepository();

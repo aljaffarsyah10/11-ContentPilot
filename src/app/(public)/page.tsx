@@ -1,8 +1,38 @@
 import React from "react";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Lightbulb, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "ContentPilot - Social Media Content Planning & AI Caption Platform",
+  description:
+    "Satukan ide, susun jadwal tayang bulanan di kalender visual, dan hasilkan caption menarik dalam hitungan detik dengan AI.",
+  keywords: [
+    "content planning",
+    "social media scheduling",
+    "ai caption generator",
+    "perencanaan konten",
+    "kalender media sosial",
+    "kreator indonesia",
+  ],
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    url: "https://contentpilot.id",
+    siteName: "ContentPilot",
+    title: "ContentPilot - Social Media Content Planning & AI Caption Platform",
+    description:
+      "Rencanakan jadwal tayang, kelola inspirasi ide, dan hasilkan caption media sosial berkualitas tinggi dalam hitungan detik.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ContentPilot - Social Media Content Planning & AI Caption Platform",
+    description:
+      "Rencanakan jadwal tayang, kelola inspirasi ide, dan hasilkan caption media sosial berkualitas tinggi dalam hitungan detik.",
+  },
+};
 
 export default function LandingPage() {
   return (
