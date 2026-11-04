@@ -1,0 +1,79 @@
+version: "3.9"
+
+# ============================================================
+# ContentPilot — docker-compose for self-hosted VPS deployment
+# Usage:
+#   cp .env.example .env.production
+#   # fill in .env.production values
+#   docker compose --env-file .env.production up -d
+# ============================================================
+
+services:
+  # ---- PostgreSQL Database ----
+  postgres:
+    image: postgres:16-alpine
+    container_name: contentpilot_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-contentpilot}
+      POSTGRES_USER: ${POSTGRES_USER:-contentpilot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - contentpilot_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-contentpilot}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---- Prisma Migration (runs once at startup) ----
+  migrate:
+    image: node:22-alpine
+    container_name: contentpilot_migrate
+    working_dir: /app
+    volumes:
+      - ./prisma:/app/prisma
+      - ./node_modules:/app/node_modules
+      - ./package.json:/app/package.json
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-contentpilot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-contentpilot}?schema=public
+    command: sh -c "npx prisma migrate deploy"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - contentpilot_net
+    restart: "no"
+
+  # ---- Next.js Application ----
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: contentpilot_app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-contentpilot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-contentpilot}?schema=public
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_URL: ${AUTH_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - contentpilot_net
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  contentpilot_net:
+    driver: bridge
