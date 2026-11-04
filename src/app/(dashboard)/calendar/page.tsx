@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, Suspense } from "react";
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
@@ -8,6 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlatformBadge } from "@/components/shared/platform-badge";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useMockStore } from "@/features/shared/mock-store";
+import { api } from "@/lib/api/api-client";
 import { ContentItem } from "@/types/content.types";
 import {
   format,
@@ -41,11 +42,15 @@ import {
   Clock,
   Edit,
   ArrowRight,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 
 function CalendarView() {
   const router = useRouter();
-  const { contents } = useMockStore();
+  const [events, setEvents] = useState<ContentItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
   const [viewMode, setViewMode] = useState<"month" | "week">("month");
@@ -92,11 +97,56 @@ function CalendarView() {
     }
   }, [currentDate, viewMode]);
 
+  const fetchEvents = useCallback(async () => {
+    if (daysInGrid.length === 0) return;
+    try {
+      const start = daysInGrid[0].toISOString();
+      const end = daysInGrid[daysInGrid.length - 1].toISOString();
+      const data = await api.calendar.getEvents({ startDate: start, endDate: end });
+      setEvents(data || []);
+      setError(null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal memuat jadwal kalender.";
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [daysInGrid]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const start = daysInGrid[0]?.toISOString();
+    const end = daysInGrid[daysInGrid.length - 1]?.toISOString();
+
+    if (!start || !end) return;
+
+    api.calendar
+      .getEvents({ startDate: start, endDate: end })
+      .then((data) => {
+        if (isMounted) {
+          setEvents(data || []);
+          setError(null);
+          setIsLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (isMounted) {
+          const msg = err instanceof Error ? err.message : "Gagal memuat jadwal kalender.";
+          setError(msg);
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [daysInGrid]);
+
   // Map events to date
   const eventsByDate = useMemo(() => {
     const map = new Map<string, ContentItem[]>();
 
-    contents.forEach((item) => {
+    events.forEach((item) => {
       if (item.scheduledAt) {
         try {
           const dateKey = format(parseISO(item.scheduledAt), "yyyy-MM-dd");
@@ -109,7 +159,7 @@ function CalendarView() {
     });
 
     return map;
-  }, [contents]);
+  }, [events]);
 
   const handleCellClick = (day: Date) => {
     setSelectedDateForCreate(day);
@@ -144,7 +194,7 @@ function CalendarView() {
             <Button
               variant="outline"
               size="icon"
-              className="size-8"
+              className="size-8 cursor-pointer"
               onClick={handlePrev}
               aria-label="Periode Sebelumnya"
             >
@@ -153,7 +203,7 @@ function CalendarView() {
             <Button
               variant="outline"
               size="icon"
-              className="size-8"
+              className="size-8 cursor-pointer"
               onClick={handleNext}
               aria-label="Periode Berikutnya"
             >
@@ -166,7 +216,7 @@ function CalendarView() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs text-primary font-medium"
+            className="text-xs text-primary font-medium cursor-pointer"
             onClick={handleToday}
           >
             Hari Ini
@@ -178,7 +228,7 @@ function CalendarView() {
           <Button
             variant={viewMode === "month" ? "default" : "ghost"}
             size="sm"
-            className="text-xs h-7 px-3"
+            className="text-xs h-7 px-3 cursor-pointer"
             onClick={() => setViewMode("month")}
           >
             Bulan
@@ -186,7 +236,7 @@ function CalendarView() {
           <Button
             variant={viewMode === "week" ? "default" : "ghost"}
             size="sm"
-            className="text-xs h-7 px-3"
+            className="text-xs h-7 px-3 cursor-pointer"
             onClick={() => setViewMode("week")}
           >
             Minggu
@@ -194,87 +244,104 @@ function CalendarView() {
         </div>
       </div>
 
-      {/* Calendar Grid Container */}
-      <Card className="overflow-hidden border-border bg-card shadow-xs">
-        <CardContent className="p-0">
-          {/* Day Names Header */}
-          <div className="grid grid-cols-7 border-b border-border bg-muted/40 text-center text-xs font-semibold text-muted-foreground py-2.5">
-            <div>Senin</div>
-            <div>Selasa</div>
-            <div>Rabu</div>
-            <div>Kamis</div>
-            <div>Jumat</div>
-            <div className="text-primary font-bold">Sabtu</div>
-            <div className="text-destructive font-bold">Minggu</div>
-          </div>
+      {error ? (
+        <div className="flex flex-col items-center justify-center p-8 text-center rounded-xl border border-destructive/20 bg-destructive/5 space-y-3">
+          <AlertCircle className="size-6 text-destructive" />
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <Button onClick={fetchEvents} variant="outline" size="sm">
+            <RefreshCw className="mr-2 size-3.5" />
+            Coba Lagi
+          </Button>
+        </div>
+      ) : (
+        /* Calendar Grid Container */
+        <Card className="overflow-hidden border-border bg-card shadow-xs">
+          <CardContent className="p-0">
+            {/* Day Names Header */}
+            <div className="grid grid-cols-7 border-b border-border bg-muted/40 text-center text-xs font-semibold text-muted-foreground py-2.5">
+              <div>Senin</div>
+              <div>Selasa</div>
+              <div>Rabu</div>
+              <div>Kamis</div>
+              <div>Jumat</div>
+              <div className="text-primary font-bold">Sabtu</div>
+              <div className="text-destructive font-bold">Minggu</div>
+            </div>
 
-          {/* Days Grid Cells */}
-          <div
-            className={`grid grid-cols-7 divide-x divide-y divide-border ${
-              viewMode === "month" ? "min-h-[640px]" : "min-h-[380px]"
-            }`}
-          >
-            {daysInGrid.map((day) => {
-              const dateKey = format(day, "yyyy-MM-dd");
-              const dayEvents = eventsByDate.get(dateKey) || [];
-              const isCurrentMonth = isSameMonth(day, currentDate);
-              const isTodayCell = isToday(day);
+            {/* Days Grid Cells */}
+            <div
+              className={`grid grid-cols-7 divide-x divide-y divide-border ${
+                viewMode === "month" ? "min-h-[640px]" : "min-h-[380px]"
+              }`}
+            >
+              {daysInGrid.map((day) => {
+                const dateKey = format(day, "yyyy-MM-dd");
+                const dayEvents = eventsByDate.get(dateKey) || [];
+                const isCurrentMonth = isSameMonth(day, currentDate);
+                const isTodayCell = isToday(day);
 
-              return (
-                <div
-                  key={day.toISOString()}
-                  onClick={() => handleCellClick(day)}
-                  className={`group relative flex flex-col p-2 transition-colors cursor-pointer min-h-[100px] ${
-                    !isCurrentMonth ? "bg-muted/15 text-muted-foreground/40" : "bg-card hover:bg-muted/30"
-                  }`}
-                >
-                  {/* Date Number Badge */}
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span
-                      className={`inline-flex size-6 items-center justify-center rounded-full text-xs font-medium ${
-                        isTodayCell
-                          ? "bg-primary text-primary-foreground font-bold shadow-xs"
-                          : isCurrentMonth
-                          ? "text-foreground"
-                          : "text-muted-foreground/50"
-                      }`}
-                    >
-                      {format(day, "d")}
-                    </span>
-
-                    {/* Hover Plus Button */}
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity text-primary text-[10px] font-medium flex items-center gap-0.5">
-                      <Plus className="size-3" />
-                    </span>
-                  </div>
-
-                  {/* Event Chips List */}
-                  <div className="flex flex-col gap-1 overflow-hidden flex-1">
-                    {dayEvents.slice(0, 3).map((event) => (
-                      <div
-                        key={event.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedEvent(event);
-                        }}
-                        className="group/chip flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors truncate"
+                return (
+                  <div
+                    key={day.toISOString()}
+                    onClick={() => handleCellClick(day)}
+                    className={`group relative flex flex-col p-2 transition-colors cursor-pointer min-h-[100px] ${
+                      !isCurrentMonth ? "bg-muted/15 text-muted-foreground/40" : "bg-card hover:bg-muted/30"
+                    }`}
+                  >
+                    {/* Date Number Badge */}
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span
+                        className={`inline-flex size-6 items-center justify-center rounded-full text-xs font-medium ${
+                          isTodayCell
+                            ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                            : isCurrentMonth
+                            ? "text-foreground"
+                            : "text-muted-foreground/50"
+                        }`}
                       >
-                        <span className="size-1.5 rounded-full bg-primary shrink-0" />
-                        <span className="truncate">{event.title}</span>
-                      </div>
-                    ))}
-                    {dayEvents.length > 3 && (
-                      <span className="text-[10px] text-muted-foreground font-medium pl-1">
-                        +{dayEvents.length - 3} lainnya
+                        {format(day, "d")}
                       </span>
-                    )}
+
+                      {/* Hover Plus Button */}
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-primary text-[10px] font-medium flex items-center gap-0.5">
+                        <Plus className="size-3" />
+                      </span>
+                    </div>
+
+                    {/* Event Chips List */}
+                    <div className="flex flex-col gap-1 overflow-hidden flex-1">
+                      {isLoading ? (
+                        <div className="space-y-1">
+                          <Skeleton className="h-3.5 w-full rounded" />
+                        </div>
+                      ) : (
+                        dayEvents.slice(0, 3).map((event) => (
+                          <div
+                            key={event.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedEvent(event);
+                            }}
+                            className="group/chip flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors truncate"
+                          >
+                            <span className="size-1.5 rounded-full bg-primary shrink-0" />
+                            <span className="truncate">{event.title}</span>
+                          </div>
+                        ))
+                      )}
+                      {dayEvents.length > 3 && (
+                        <span className="text-[10px] text-muted-foreground font-medium pl-1">
+                          +{dayEvents.length - 3} lainnya
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Event Detail Modal */}
       <Dialog open={Boolean(selectedEvent)} onOpenChange={(open) => !open && setSelectedEvent(null)}>
@@ -303,7 +370,7 @@ function CalendarView() {
 
           {selectedEvent?.hashtags && selectedEvent.hashtags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {selectedEvent.hashtags.map((h) => (
+              {selectedEvent.hashtags.map((h: string) => (
                 <span
                   key={h}
                   className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
@@ -354,7 +421,7 @@ function CalendarView() {
             <Button variant="outline" onClick={() => setSelectedDateForCreate(null)}>
               Batal
             </Button>
-            <Button onClick={handleProceedToCreate}>
+            <Button onClick={handleProceedToCreate} className="cursor-pointer">
               Lanjut ke Editor
               <ArrowRight className="size-4 ml-1.5" />
             </Button>

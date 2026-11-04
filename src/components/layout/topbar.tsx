@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,6 +31,7 @@ const routeTitles: Record<string, string> = {
 export function Topbar() {
   const pathname = usePathname();
   const [openMobile, setOpenMobile] = useState(false);
+  const { data: session } = useSession();
 
   // Determine page title
   let currentTitle = "ContentPilot";
@@ -39,6 +41,19 @@ export function Topbar() {
       break;
     }
   }
+
+  const userName = session?.user?.name || "Kreator Konten";
+  const userEmail = session?.user?.email || "user@contentpilot.id";
+  const userInitials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const handleSignOut = () => {
+    signOut({ callbackUrl: "/login" });
+  };
 
   return (
     <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6">
@@ -91,16 +106,16 @@ export function Topbar() {
           >
             <Avatar className="size-8">
               <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                CP
+                {userInitials || "CP"}
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Demo Creator</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  creator@contentpilot.id
+                <p className="text-sm font-medium leading-none truncate">{userName}</p>
+                <p className="text-xs leading-none text-muted-foreground truncate">
+                  {userEmail}
                 </p>
               </div>
             </DropdownMenuLabel>
@@ -112,11 +127,12 @@ export function Topbar() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Link href="/login" className="flex items-center w-full px-2 py-1.5 cursor-pointer text-destructive">
-                <LogOut className="size-4 mr-2" />
-                <span>Keluar</span>
-              </Link>
+            <DropdownMenuItem
+              onClick={handleSignOut}
+              className="flex items-center w-full px-2 py-1.5 cursor-pointer text-destructive focus:text-destructive"
+            >
+              <LogOut className="size-4 mr-2" />
+              <span>Keluar</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PlatformBadge, SocialPlatform } from "@/components/shared/platform-badge";
-import { useMockStore } from "@/features/shared/mock-store";
+import { api } from "@/lib/api/api-client";
 import { toast } from "sonner";
 import { Sparkles, ArrowLeft, Loader2, Calendar } from "lucide-react";
 
@@ -51,7 +51,6 @@ const platformOptions: SocialPlatform[] = [
 function NewContentForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { addContent } = useMockStore();
 
   const {
     register,
@@ -106,7 +105,7 @@ function NewContentForm() {
             .filter(Boolean)
         : [];
 
-      addContent({
+      await api.contents.create({
         title: values.title,
         caption: values.caption || null,
         hashtags: parsedHashtags,
@@ -114,12 +113,14 @@ function NewContentForm() {
         status: values.status,
         scheduledAt: values.scheduledAt ? new Date(values.scheduledAt).toISOString() : null,
         notes: values.notes || null,
+        originIdeaId: searchParams.get("originIdeaId") || null,
       });
 
       toast.success("Konten berhasil dibuat dan disimpan!");
       router.push("/contents");
-    } catch {
-      toast.error("Gagal menyimpan konten. Periksa formulir Anda.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal menyimpan konten. Periksa formulir Anda.";
+      toast.error(msg);
     }
   };
 
@@ -170,7 +171,7 @@ function NewContentForm() {
                           type="button"
                           key={p}
                           onClick={() => field.onChange(p)}
-                          className={`flex items-center justify-between p-3 rounded-lg border text-left transition-all ${
+                          className={`flex items-center justify-between p-3 rounded-lg border text-left transition-all cursor-pointer ${
                             isSelected
                               ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-xs"
                               : "border-border hover:bg-muted/50"
@@ -324,7 +325,7 @@ function NewContentForm() {
 
               {/* Submit Buttons */}
               <div className="pt-4 flex flex-col gap-2">
-                <Button type="submit" disabled={isSubmitting} className="w-full">
+                <Button type="submit" disabled={isSubmitting} className="w-full cursor-pointer">
                   {isSubmitting ? (
                     <>
                       <Loader2 className="size-4 animate-spin mr-2" />

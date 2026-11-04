@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PlatformBadge, SocialPlatform } from "@/components/shared/platform-badge";
-import { getMockCaptionResult } from "@/features/ai-generator/mocks/ai.mock";
 import { AICaptionVariant, CaptionTone, CaptionLength } from "@/types/ai.types";
+import { api } from "@/lib/api/api-client";
 import { toast } from "sonner";
 import {
   Sparkles,
@@ -19,6 +19,7 @@ import {
   Plus,
   Loader2,
   HelpCircle,
+  FileText,
 } from "lucide-react";
 
 const toneOptions: Array<{ label: string; value: CaptionTone }> = [
@@ -55,32 +56,35 @@ export default function AIGeneratorPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [results, setResults] = useState<AICaptionVariant[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [savingVariantId, setSavingVariantId] = useState<string | null>(null);
 
-  const handleGenerate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGenerate = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!topic.trim()) {
       toast.error("Mohon isi topik atau ide konten Anda.");
       return;
     }
 
     setIsGenerating(true);
-
-    // Simulate AI generation network delay
-    setTimeout(() => {
-      const mockData = getMockCaptionResult({
-        topic,
+    try {
+      const res = await api.ai.generateCaption({
+        topic: topic.trim(),
         platform,
         tone,
         language,
         length,
-        audience,
-        additionalInstructions,
+        audience: audience.trim() || undefined,
+        additionalInstructions: additionalInstructions.trim() || undefined,
       });
 
-      setResults(mockData.captions);
+      setResults(res.captions || []);
+      toast.success(`${res.captions?.length || 0} variasi caption AI berhasil dihasilkan!`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal menghasilkan caption AI. Silakan coba lagi.";
+      toast.error(msg);
+    } finally {
       setIsGenerating(false);
-      toast.success("3 variasi caption AI berhasil dihasilkan!");
-    }, 900);
+    }
   };
 
   const handleCopy = (id: string, text: string) => {
@@ -101,6 +105,26 @@ export default function AIGeneratorPage() {
     });
 
     router.push(`/contents/new?${params.toString()}`);
+  };
+
+  const handleSaveDraftDirectly = async (variant: AICaptionVariant) => {
+    setSavingVariantId(variant.id);
+    try {
+      await api.contents.create({
+        title: topic.slice(0, 100),
+        caption: `${variant.caption}\n\n${variant.callToAction}`,
+        hashtags: variant.hashtags,
+        platform: platform,
+        status: "DRAFT",
+      });
+
+      toast.success("Variasi caption berhasil disimpan sebagai draf konten!");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal menyimpan variasi sebagai draf.";
+      toast.error(msg);
+    } finally {
+      setSavingVariantId(null);
+    }
   };
 
   return (
@@ -177,7 +201,7 @@ export default function AIGeneratorPage() {
                           key={t.value}
                           type="button"
                           onClick={() => setTone(t.value)}
-                          className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
+                          className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors border cursor-pointer ${
                             isSelected
                               ? "bg-primary text-primary-foreground border-primary shadow-xs"
                               : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"
@@ -253,7 +277,7 @@ export default function AIGeneratorPage() {
                 <Button
                   type="submit"
                   disabled={isGenerating || !topic.trim()}
-                  className="w-full h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-medium mt-2"
+                  className="w-full h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-medium mt-2 cursor-pointer"
                 >
                   {isGenerating ? (
                     <>
@@ -304,9 +328,9 @@ export default function AIGeneratorPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleGenerate}
+                  onClick={() => handleGenerate()}
                   disabled={isGenerating}
-                  className="text-xs text-muted-foreground hover:text-foreground"
+                  className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   <RotateCw className="size-3.5 mr-1" />
                   Regenerate
@@ -323,7 +347,7 @@ export default function AIGeneratorPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 text-xs"
+                        className="h-7 text-xs cursor-pointer"
                         onClick={() =>
                           handleCopy(
                             variant.id,
@@ -347,8 +371,22 @@ export default function AIGeneratorPage() {
                       </Button>
                       <Button
                         size="sm"
+                        variant="outline"
+                        className="h-7 text-xs cursor-pointer"
+                        disabled={savingVariantId === variant.id}
+                        onClick={() => handleSaveDraftDirectly(variant)}
+                      >
+                        {savingVariantId === variant.id ? (
+                          <Loader2 className="size-3 mr-1 animate-spin" />
+                        ) : (
+                          <FileText className="size-3 mr-1" />
+                        )}
+                        Simpan Draft
+                      </Button>
+                      <Button
+                        size="sm"
                         variant="default"
-                        className="h-7 text-xs"
+                        className="h-7 text-xs cursor-pointer"
                         onClick={() => handleUseAsContent(variant)}
                       >
                         <Plus className="size-3 mr-1" />

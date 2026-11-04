@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlatformBadge, SocialPlatform } from "@/components/shared/platform-badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +25,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useMockStore } from "@/features/shared/mock-store";
+import { api } from "@/lib/api/api-client";
+import { ContentItem } from "@/types/content.types";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
@@ -69,10 +71,12 @@ interface ContentDetailPageProps {
 function ContentDetailView({ params }: ContentDetailPageProps) {
   const { id } = use(params);
   const router = useRouter();
-  const { getContentById, updateContent, deleteContent } = useMockStore();
 
-  const content = getContentById(id);
+  const [content, setContent] = useState<ContentItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     register,
@@ -93,34 +97,109 @@ function ContentDetailView({ params }: ContentDetailPageProps) {
     },
   });
 
-  // Call all hooks unconditionally before any return
   const watchedCaption = useWatch({ control, name: "caption" }) || "";
 
   useEffect(() => {
-    if (content) {
-      let formattedDate = "";
-      if (content.scheduledAt) {
-        try {
-          const d = new Date(content.scheduledAt);
-          formattedDate = d.toISOString().slice(0, 16);
-        } catch {
-          // ignore parsing error
+    let isMounted = true;
+    api.contents
+      .get(id)
+      .then((data) => {
+        if (!isMounted) return;
+        setContent(data);
+        let formattedDate = "";
+        if (data.scheduledAt) {
+          try {
+            const d = new Date(data.scheduledAt);
+            formattedDate = d.toISOString().slice(0, 16);
+          } catch {
+            // ignore
+          }
         }
-      }
-
-      reset({
-        title: content.title,
-        caption: content.caption || "",
-        hashtags: content.hashtags.join(" "),
-        platform: content.platform,
-        status: content.status,
-        scheduledAt: formattedDate,
-        notes: content.notes || "",
+        reset({
+          title: data.title,
+          caption: data.caption || "",
+          hashtags: (data.hashtags || []).map((h: string) => `#${h}`).join(" "),
+          platform: data.platform,
+          status: data.status,
+          scheduledAt: formattedDate,
+          notes: data.notes || "",
+        });
+        setError(null);
+        setIsLoading(false);
+      })
+      .catch((err: unknown) => {
+        if (!isMounted) return;
+        const msg = err instanceof Error ? err.message : "Konten tidak ditemukan.";
+        setError(msg);
+        setIsLoading(false);
       });
-    }
-  }, [content, reset]);
 
-  if (!content) {
+    return () => {
+      isMounted = false;
+    };
+  }, [id, reset]);
+
+  const onSubmit = async (values: FormValues) => {
+    try {
+      const parsedHashtags = values.hashtags
+        ? values.hashtags
+            .split(/[\s,]+/)
+            .map((t) => t.trim().replace(/^#/, ""))
+            .filter(Boolean)
+        : [];
+
+      const updated = await api.contents.update(id, {
+        title: values.title,
+        caption: values.caption || null,
+        hashtags: parsedHashtags,
+        platform: values.platform,
+        status: values.status,
+        scheduledAt: values.scheduledAt ? new Date(values.scheduledAt).toISOString() : null,
+        notes: values.notes || null,
+      });
+
+      setContent(updated);
+      toast.success("Perubahan materi konten berhasil disimpan!");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal memperbarui konten.";
+      toast.error(msg);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await api.contents.delete(id);
+      toast.success("Konten berhasil dihapus.");
+      setDeleteDialogOpen(false);
+      router.push("/contents");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal menghapus konten.";
+      toast.error(msg);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-10 w-3/4" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <div className="lg:col-span-8 space-y-4">
+            <Skeleton className="h-40 w-full rounded-xl" />
+            <Skeleton className="h-64 w-full rounded-xl" />
+          </div>
+          <div className="lg:col-span-4">
+            <Skeleton className="h-64 w-full rounded-xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !content) {
     return (
       <div className="space-y-6">
         <Link
@@ -134,7 +213,7 @@ function ContentDetailView({ params }: ContentDetailPageProps) {
           <EmptyState
             icon={FileText}
             title="Konten Tidak Ditemukan"
-            description={`Konten dengan ID "${id}" tidak ditemukan dalam sistem.`}
+            description={error || `Konten dengan ID "${id}" tidak ditemukan dalam sistem.`}
             actionLabel="Kembali ke Daftar Konten"
             onAction={() => router.push("/contents")}
           />
@@ -142,38 +221,6 @@ function ContentDetailView({ params }: ContentDetailPageProps) {
       </div>
     );
   }
-
-  const onSubmit = async (values: FormValues) => {
-    try {
-      const parsedHashtags = values.hashtags
-        ? values.hashtags
-            .split(/[\s,]+/)
-            .map((t) => t.trim().replace(/^#/, ""))
-            .filter(Boolean)
-        : [];
-
-      updateContent(id, {
-        title: values.title,
-        caption: values.caption || null,
-        hashtags: parsedHashtags,
-        platform: values.platform,
-        status: values.status,
-        scheduledAt: values.scheduledAt ? new Date(values.scheduledAt).toISOString() : null,
-        notes: values.notes || null,
-      });
-
-      toast.success("Perubahan materi konten berhasil disimpan!");
-    } catch {
-      toast.error("Gagal memperbarui konten.");
-    }
-  };
-
-  const handleDelete = () => {
-    deleteContent(id);
-    toast.success("Konten berhasil dihapus.");
-    setDeleteDialogOpen(false);
-    router.push("/contents");
-  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -194,6 +241,7 @@ function ContentDetailView({ params }: ContentDetailPageProps) {
           type="button"
           variant="destructive"
           size="sm"
+          className="cursor-pointer"
           onClick={() => setDeleteDialogOpen(true)}
         >
           <Trash2 className="size-4 mr-1.5" />
@@ -236,7 +284,7 @@ function ContentDetailView({ params }: ContentDetailPageProps) {
                           type="button"
                           key={p}
                           onClick={() => field.onChange(p)}
-                          className={`flex items-center justify-between p-3 rounded-lg border text-left transition-all ${
+                          className={`flex items-center justify-between p-3 rounded-lg border text-left transition-all cursor-pointer ${
                             isSelected
                               ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-xs"
                               : "border-border hover:bg-muted/50"
@@ -336,7 +384,7 @@ function ContentDetailView({ params }: ContentDetailPageProps) {
               </div>
 
               <div className="pt-4 flex flex-col gap-2">
-                <Button type="submit" disabled={isSubmitting} className="w-full">
+                <Button type="submit" disabled={isSubmitting} className="w-full cursor-pointer">
                   {isSubmitting ? (
                     <>
                       <Loader2 className="size-4 animate-spin mr-2" />
@@ -368,12 +416,20 @@ function ContentDetailView({ params }: ContentDetailPageProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
+              disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Hapus Sekarang
+              {isDeleting ? (
+                <>
+                  <Loader2 className="size-4 animate-spin mr-1.5" />
+                  Menghapus...
+                </>
+              ) : (
+                "Hapus Sekarang"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

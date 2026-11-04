@@ -1,15 +1,17 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PlatformBadge } from "@/components/shared/platform-badge";
 import { StatusBadge, ContentStatus } from "@/components/shared/status-badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -36,7 +38,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useMockStore } from "@/features/shared/mock-store";
+import { api } from "@/lib/api/api-client";
+import { ContentItem } from "@/types/content.types";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { toast } from "sonner";
@@ -49,6 +52,9 @@ import {
   Trash2,
   Calendar,
   CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
 
 const platforms: Array<{ label: string; value: string }> = [
@@ -63,7 +69,9 @@ const platforms: Array<{ label: string; value: string }> = [
 
 export default function ContentsPage() {
   const router = useRouter();
-  const { contents, deleteContent, updateContent } = useMockStore();
+  const [contents, setContents] = useState<ContentItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState<string>("ALL");
@@ -71,38 +79,82 @@ export default function ContentsPage() {
 
   // Deletion modal state
   const [contentToDelete, setContentToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Filtered contents
-  const filteredContents = useMemo(() => {
-    return contents.filter((item) => {
-      // Search filter
-      const matchesSearch =
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.caption && item.caption.toLowerCase().includes(searchQuery.toLowerCase()));
+  const fetchContents = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await api.contents.list({
+        platform: selectedPlatform,
+        status: selectedStatus,
+        search: searchQuery,
+      });
+      setContents(data || []);
+      setError(null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal memuat daftar konten.";
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedPlatform, selectedStatus, searchQuery]);
 
-      // Platform filter
-      const matchesPlatform =
-        selectedPlatform === "ALL" || item.platform === selectedPlatform;
+  useEffect(() => {
+    let isMounted = true;
+    const timer = setTimeout(() => {
+      api.contents
+        .list({
+          platform: selectedPlatform,
+          status: selectedStatus,
+          search: searchQuery,
+        })
+        .then((data) => {
+          if (isMounted) {
+            setContents(data || []);
+            setError(null);
+            setIsLoading(false);
+          }
+        })
+        .catch((err: unknown) => {
+          if (isMounted) {
+            const msg = err instanceof Error ? err.message : "Gagal memuat daftar konten.";
+            setError(msg);
+            setIsLoading(false);
+          }
+        });
+    }, 250);
 
-      // Status filter
-      const matchesStatus =
-        selectedStatus === "all" || item.status.toLowerCase() === selectedStatus.toLowerCase();
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [selectedPlatform, selectedStatus, searchQuery]);
 
-      return matchesSearch && matchesPlatform && matchesStatus;
-    });
-  }, [contents, searchQuery, selectedPlatform, selectedStatus]);
-
-  const handleDelete = () => {
-    if (contentToDelete) {
-      deleteContent(contentToDelete);
+  const handleDelete = async () => {
+    if (!contentToDelete) return;
+    setIsDeleting(true);
+    try {
+      await api.contents.delete(contentToDelete);
       toast.success("Konten berhasil dihapus.");
       setContentToDelete(null);
+      fetchContents();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal menghapus konten.";
+      toast.error(msg);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const handleStatusChange = (id: string, newStatus: ContentStatus) => {
-    updateContent(id, { status: newStatus });
-    toast.success(`Status konten diperbarui ke ${newStatus}!`);
+  const handleStatusChange = async (id: string, newStatus: ContentStatus) => {
+    try {
+      await api.contents.update(id, { status: newStatus });
+      toast.success(`Status konten diperbarui ke ${newStatus}!`);
+      fetchContents();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal memperbarui status konten.";
+      toast.error(msg);
+    }
   };
 
   return (
@@ -156,15 +208,35 @@ export default function ContentsPage() {
         >
           <TabsList className="grid w-full grid-cols-4 sm:w-auto">
             <TabsTrigger value="all">Semua</TabsTrigger>
-            <TabsTrigger value="draft">Draft</TabsTrigger>
-            <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
-            <TabsTrigger value="published">Published</TabsTrigger>
+            <TabsTrigger value="DRAFT">Draft</TabsTrigger>
+            <TabsTrigger value="SCHEDULED">Scheduled</TabsTrigger>
+            <TabsTrigger value="PUBLISHED">Published</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
-      {/* Content Table Area */}
-      {filteredContents.length === 0 ? (
+      {error ? (
+        <div className="flex flex-col items-center justify-center p-8 text-center rounded-xl border border-destructive/20 bg-destructive/5 space-y-3">
+          <AlertCircle className="size-6 text-destructive" />
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <Button onClick={fetchContents} variant="outline" size="sm">
+            <RefreshCw className="mr-2 size-3.5" />
+            Coba Lagi
+          </Button>
+        </div>
+      ) : isLoading ? (
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between py-2 border-b border-border/40 last:border-0">
+              <div className="space-y-1.5 flex-1">
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+              <Skeleton className="h-6 w-20" />
+            </div>
+          ))}
+        </div>
+      ) : contents.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-8">
           <EmptyState
             icon={FileText}
@@ -203,7 +275,7 @@ export default function ContentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredContents.map((content) => (
+              {contents.map((content) => (
                 <TableRow key={content.id} className="hover:bg-muted/30">
                   <TableCell>
                     <PlatformBadge platform={content.platform} />
@@ -315,12 +387,20 @@ export default function ContentsPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
+              disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Hapus Konten
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Menghapus...
+                </>
+              ) : (
+                "Hapus Konten"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

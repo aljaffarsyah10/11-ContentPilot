@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useTransition, Suspense } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
@@ -11,7 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { EmptyState } from "@/components/shared/empty-state";
 import { PlatformBadge } from "@/components/shared/platform-badge";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { useMockStore } from "@/features/shared/mock-store";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/lib/api/api-client";
+import { ContentItem } from "@/types/content.types";
+import { IdeaItem } from "@/types/idea.types";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { toast } from "sonner";
@@ -23,38 +26,115 @@ import {
   Plus,
   Sparkles,
   ArrowRight,
+  AlertCircle,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
+
+interface DashboardData {
+  metrics: {
+    totalContents: number;
+    scheduledCount: number;
+    draftCount: number;
+    publishedCount: number;
+    activeIdeasCount: number;
+  };
+  upcoming: ContentItem[];
+  recentIdeas: IdeaItem[];
+}
 
 function DashboardView() {
   const router = useRouter();
-  const { contents, ideas, convertIdeaToContent } = useMockStore();
-  const [, startTransition] = useTransition();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [convertingId, setConvertingId] = useState<string | null>(null);
 
-  // Statistics calculation
-  const totalContents = contents.length;
-  const scheduledCount = contents.filter((c) => c.status === "SCHEDULED").length;
-  const draftCount = contents.filter((c) => c.status === "DRAFT").length;
-  const activeIdeasCount = ideas.filter((i) => i.status === "NEW" || i.status === "IN_PROGRESS").length;
+  const fetchDashboardData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await api.dashboard.getData();
+      setData(res);
+      setError(null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal memuat ringkasan dashboard.";
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  // Upcoming scheduled contents (sorted by scheduledAt ASC)
-  const upcomingContents = contents
-    .filter((c) => c.status === "SCHEDULED" && c.scheduledAt)
-    .sort((a, b) => new Date(a.scheduledAt!).getTime() - new Date(b.scheduledAt!).getTime())
-    .slice(0, 5);
+  useEffect(() => {
+    let isMounted = true;
+    api.dashboard
+      .getData()
+      .then((res) => {
+        if (isMounted) {
+          setData(res);
+          setError(null);
+          setIsLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (isMounted) {
+          const msg = err instanceof Error ? err.message : "Gagal memuat ringkasan dashboard.";
+          setError(msg);
+          setIsLoading(false);
+        }
+      });
 
-  // Recent ideas
-  const recentIdeas = ideas
-    .filter((i) => i.status !== "USED" && i.status !== "ARCHIVED")
-    .slice(0, 3);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-  const handleConvertIdea = (ideaId: string, title: string) => {
-    startTransition(() => {
-      const created = convertIdeaToContent(ideaId);
-      if (created) {
-        toast.success(`Ide "${title}" berhasil dikonversi menjadi draf konten!`);
+  const handleConvertIdea = async (ideaId: string, title: string) => {
+    setConvertingId(ideaId);
+    try {
+      const createdContent = await api.ideas.convert(ideaId);
+      toast.success(`Ide "${title}" berhasil dikonversi menjadi draf konten!`);
+      // Refresh dashboard data
+      fetchDashboardData();
+      if (createdContent?.id) {
+        router.push(`/contents/${createdContent.id}`);
       }
-    });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal mengonversi ide.";
+      toast.error(msg);
+    } finally {
+      setConvertingId(null);
+    }
   };
+
+  if (error && !data) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Dashboard"
+          description="Pantau progres perencanaan konten dan jadwal tayang mendatang Anda."
+        />
+        <div className="flex flex-col items-center justify-center p-12 text-center rounded-xl border border-destructive/20 bg-destructive/5 space-y-3">
+          <AlertCircle className="size-8 text-destructive" />
+          <h3 className="font-semibold text-foreground text-base">Gagal Memuat Data Dashboard</h3>
+          <p className="text-sm text-muted-foreground max-w-md">{error}</p>
+          <Button onClick={fetchDashboardData} variant="outline" className="mt-2">
+            <RefreshCw className="mr-2 size-4" />
+            Coba Lagi
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const metrics = data?.metrics || {
+    totalContents: 0,
+    scheduledCount: 0,
+    draftCount: 0,
+    publishedCount: 0,
+    activeIdeasCount: 0,
+  };
+  const upcomingContents = data?.upcoming || [];
+  const recentIdeas = data?.recentIdeas || [];
 
   return (
     <div className="space-y-8">
@@ -81,32 +161,42 @@ function DashboardView() {
 
       {/* Stat Cards Row */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Konten"
-          value={totalContents}
-          icon={FileText}
-          description="Semua konten aktif"
-          trend="+12% bulan ini"
-        />
-        <StatCard
-          title="Jadwal Tayang"
-          value={scheduledCount}
-          icon={CalendarIcon}
-          description="Konten siap tayang"
-          trend="Terjadwal"
-        />
-        <StatCard
-          title="Draft Konten"
-          value={draftCount}
-          icon={Clock}
-          description="Masih dalam penulisan"
-        />
-        <StatCard
-          title="Ide Tersimpan"
-          value={activeIdeasCount}
-          icon={Lightbulb}
-          description="Inspirasi belum diproduksi"
-        />
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="p-4 space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-3 w-32" />
+            </Card>
+          ))
+        ) : (
+          <>
+            <StatCard
+              title="Total Konten"
+              value={metrics.totalContents}
+              icon={FileText}
+              description="Semua konten aktif"
+            />
+            <StatCard
+              title="Jadwal Tayang"
+              value={metrics.scheduledCount}
+              icon={CalendarIcon}
+              description="Konten siap tayang"
+            />
+            <StatCard
+              title="Draft Konten"
+              value={metrics.draftCount}
+              icon={Clock}
+              description="Masih dalam penulisan"
+            />
+            <StatCard
+              title="Ide Tersimpan"
+              value={metrics.activeIdeasCount}
+              icon={Lightbulb}
+              description="Inspirasi belum diproduksi"
+            />
+          </>
+        )}
       </div>
 
       {/* Main Split: Upcoming Content & Ideas */}
@@ -136,7 +226,16 @@ function DashboardView() {
               </Link>
             </CardHeader>
             <CardContent className="flex-1">
-              {upcomingContents.length === 0 ? (
+              {isLoading ? (
+                <div className="space-y-4 py-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              ) : upcomingContents.length === 0 ? (
                 <EmptyState
                   icon={CalendarIcon}
                   title="Belum Ada Jadwal Konten"
@@ -184,7 +283,7 @@ function DashboardView() {
           </Card>
         </div>
 
-        {/* Right: Quick Ideas & Platform Distribution (5 cols) */}
+        {/* Right: Quick Ideas (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
           <Card className="h-full flex flex-col justify-between">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -209,7 +308,13 @@ function DashboardView() {
               </Link>
             </CardHeader>
             <CardContent className="flex-1 space-y-3">
-              {recentIdeas.length === 0 ? (
+              {isLoading ? (
+                <div className="space-y-3 py-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-20 w-full rounded-lg" />
+                  ))}
+                </div>
+              ) : recentIdeas.length === 0 ? (
                 <EmptyState
                   icon={Lightbulb}
                   title="Papan Ide Kosong"
@@ -238,11 +343,21 @@ function DashboardView() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 text-xs text-primary hover:text-primary font-medium"
+                        className="h-7 text-xs text-primary hover:text-primary font-medium cursor-pointer"
+                        disabled={convertingId === idea.id}
                         onClick={() => handleConvertIdea(idea.id, idea.title)}
                       >
-                        <Sparkles className="size-3 mr-1" />
-                        Jadikan Konten
+                        {convertingId === idea.id ? (
+                          <>
+                            <Loader2 className="size-3 mr-1 animate-spin" />
+                            Mengonversi...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="size-3 mr-1" />
+                            Jadikan Konten
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>

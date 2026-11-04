@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { mainNavItems, secondaryNavItems } from "@/config/navigation";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,16 @@ interface SidebarProps {
 
 export function Sidebar({ className, onNavigate }: SidebarProps) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  const userName = session?.user?.name || "Kreator Konten";
+  const userEmail = session?.user?.email || "user@contentpilot.id";
+  const userInitials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <aside
@@ -100,18 +111,17 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
           })}
         </div>
 
-        {/* User Card Mini Placeholder */}
+        {/* User Card */}
         <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-muted/40 p-2.5">
           <div className="size-8 rounded-full bg-primary/20 text-primary font-semibold flex items-center justify-center text-xs">
-            CP
+            {userInitials || "CP"}
           </div>
           <div className="flex-1 overflow-hidden">
-            <p className="text-xs font-medium text-foreground truncate">Demo Creator</p>
-            <p className="text-[11px] text-muted-foreground truncate">creator@contentpilot.id</p>
+            <p className="text-xs font-medium text-foreground truncate">{userName}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{userEmail}</p>
           </div>
         </div>
       </div>
     </aside>
   );
 }
-
