@@ -55,3 +55,4 @@ ENV HOSTNAME="0.0.0.0"
 
 # Run database migration then start the app
 CMD ["node", "server.js"]
+

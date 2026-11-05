@@ -407,3 +407,4 @@ After deployment, manually verify each step:
 | Single-instance deployment | No horizontal scaling in this config |
 | No real-time notifications | Not in MVP |
 | AI rate limiting | Basic — no Redis-backed rate limiter |
+

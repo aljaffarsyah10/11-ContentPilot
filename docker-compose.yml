@@ -77,3 +77,4 @@ volumes:
 networks:
   contentpilot_net:
     driver: bridge
+
