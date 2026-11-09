@@ -51,17 +51,17 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <div className="relative flex flex-col items-center overflow-hidden">
-      {/* Dynamic Animated Ambient Glow Orbs for Dark Mode */}
-      <div className="absolute top-[-5%] left-1/2 -translate-x-1/2 w-full max-w-7xl h-[700px] pointer-events-none -z-10 overflow-hidden">
+      {/* Dynamic Animated Ambient Glow Orbs for both Light & Dark Mode */}
+      <div className="absolute top-[-5%] left-1/2 -translate-x-1/2 w-full max-w-7xl h-[850px] pointer-events-none -z-10 overflow-hidden">
         {/* Core radial gradient */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[450px] bg-indigo-600/15 dark:bg-indigo-500/25 blur-[120px] rounded-full animate-pulse-slow" />
-        {/* Secondary ambient lights */}
-        <div className="absolute top-24 left-[15%] w-[380px] h-[380px] bg-violet-600/15 dark:bg-violet-500/20 blur-[130px] rounded-full animate-float" />
-        <div className="absolute top-36 right-[15%] w-[420px] h-[420px] bg-cyan-600/10 dark:bg-cyan-500/20 blur-[140px] rounded-full animate-pulse-slow [animation-delay:2s]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[750px] h-[480px] bg-gradient-to-b from-indigo-500/20 via-purple-500/15 to-transparent dark:from-indigo-500/30 dark:via-purple-500/20 dark:to-transparent blur-[110px] rounded-full animate-pulse-slow" />
+        {/* Secondary ambient lights with vibrant accent in light and dark */}
+        <div className="absolute top-20 left-[10%] w-[420px] h-[420px] bg-gradient-to-br from-indigo-400/25 to-blue-500/20 dark:from-indigo-600/25 dark:to-violet-600/20 blur-[130px] rounded-full animate-float" />
+        <div className="absolute top-36 right-[10%] w-[450px] h-[450px] bg-gradient-to-bl from-purple-400/25 via-pink-400/15 to-cyan-400/20 dark:from-cyan-500/20 dark:via-purple-500/20 dark:to-indigo-500/25 blur-[140px] rounded-full animate-pulse-slow [animation-delay:2.5s]" />
       </div>
 
       {/* Grid Pattern overlay for depth and modern developer/creator feel */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:36px_36px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-10" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#8080800e_1px,transparent_1px),linear-gradient(to_bottom,#8080800e_1px,transparent_1px)] bg-[size:36px_36px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-10" />
 
       {/* Hero Section */}
       <section className="relative w-full py-20 md:py-28 lg:py-36 flex flex-col items-center text-center px-4 sm:px-6 max-w-5xl mx-auto">
@@ -184,7 +184,7 @@ export default function LandingPage() {
       </section>
 
       {/* Feature Showcase Grid */}
-      <section className="w-full py-20 md:py-28 border-t border-border/60 bg-gradient-to-b from-card/30 via-background to-card/40 dark:from-slate-950/40 dark:via-background dark:to-slate-950/60">
+      <section className="w-full py-20 md:py-28 border-t border-border/60 bg-gradient-to-b from-indigo-50/40 via-background/70 to-slate-100/50 dark:from-slate-950/60 dark:via-[#090E1D]/80 dark:to-slate-950/80 backdrop-blur-xs">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mb-1">
@@ -200,7 +200,7 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="relative overflow-hidden border-border/80 dark:border-indigo-500/20 bg-gradient-to-b from-card via-card to-card/90 dark:from-slate-900/90 dark:via-slate-900/70 dark:to-slate-950/90 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/5 transition-all duration-300 group hover:-translate-y-1">
+            <Card className="relative overflow-hidden border-border/80 dark:border-indigo-500/20 bg-gradient-to-b from-card via-card/95 to-amber-500/5 dark:from-slate-900/90 dark:via-slate-900/70 dark:to-slate-950/90 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/5 transition-all duration-300 group hover:-translate-y-1">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-500 via-amber-400 to-transparent" />
               <CardContent className="p-6 space-y-3">
                 <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-2xs group-hover:scale-105 transition-transform">
@@ -213,7 +213,7 @@ export default function LandingPage() {
               </CardContent>
             </Card>
 
-            <Card className="relative overflow-hidden border-border/80 dark:border-indigo-500/30 bg-gradient-to-b from-card via-card to-card/90 dark:from-slate-900/90 dark:via-slate-900/70 dark:to-slate-950/90 hover:border-indigo-500/60 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 group hover:-translate-y-1">
+            <Card className="relative overflow-hidden border-border/80 dark:border-indigo-500/30 bg-gradient-to-b from-card via-card/95 to-indigo-500/5 dark:from-slate-900/90 dark:via-slate-900/70 dark:to-slate-950/90 hover:border-indigo-500/60 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 group hover:-translate-y-1">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-violet-500" />
               <CardContent className="p-6 space-y-3">
                 <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-violet-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 shadow-2xs group-hover:scale-105 transition-transform">
@@ -226,7 +226,7 @@ export default function LandingPage() {
               </CardContent>
             </Card>
 
-            <Card className="relative overflow-hidden border-border/80 dark:border-indigo-500/20 bg-gradient-to-b from-card via-card to-card/90 dark:from-slate-900/90 dark:via-slate-900/70 dark:to-slate-950/90 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 group hover:-translate-y-1">
+            <Card className="relative overflow-hidden border-border/80 dark:border-indigo-500/20 bg-gradient-to-b from-card via-card/95 to-blue-500/5 dark:from-slate-900/90 dark:via-slate-900/70 dark:to-slate-950/90 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 group hover:-translate-y-1">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 via-cyan-400 to-transparent" />
               <CardContent className="p-6 space-y-3">
                 <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600 dark:text-blue-400 border border-blue-500/30 shadow-2xs group-hover:scale-105 transition-transform">
@@ -242,7 +242,7 @@ export default function LandingPage() {
 
           {/* Secondary Features row with subtle gradients */}
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="flex items-center gap-3 p-4 rounded-xl border border-border/70 dark:border-border/80 bg-gradient-to-br from-card to-accent/30 dark:from-slate-900/60 dark:to-slate-800/40 shadow-2xs hover:border-indigo-500/30 transition-colors">
+            <div className="flex items-center gap-3 p-4 rounded-xl border border-border/70 dark:border-border/80 bg-gradient-to-br from-card via-indigo-500/5 to-accent/30 dark:from-slate-900/80 dark:via-indigo-950/30 dark:to-slate-800/40 shadow-2xs hover:border-indigo-500/30 transition-colors">
               <div className="p-2 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                 <Layers className="size-4 shrink-0" />
               </div>
@@ -251,7 +251,7 @@ export default function LandingPage() {
                 <p className="text-muted-foreground dark:text-slate-400">Struktur posting edukasi, promo & tips</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-4 rounded-xl border border-border/70 dark:border-border/80 bg-gradient-to-br from-card to-accent/30 dark:from-slate-900/60 dark:to-slate-800/40 shadow-2xs hover:border-blue-500/30 transition-colors">
+            <div className="flex items-center gap-3 p-4 rounded-xl border border-border/70 dark:border-border/80 bg-gradient-to-br from-card via-blue-500/5 to-accent/30 dark:from-slate-900/80 dark:via-blue-950/30 dark:to-slate-800/40 shadow-2xs hover:border-blue-500/30 transition-colors">
               <div className="p-2 rounded-lg bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                 <Share2 className="size-4 shrink-0" />
               </div>
@@ -260,7 +260,7 @@ export default function LandingPage() {
                 <p className="text-muted-foreground dark:text-slate-400">Repurpose konten sukses dengan mudah</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-4 rounded-xl border border-border/70 dark:border-border/80 bg-gradient-to-br from-card to-accent/30 dark:from-slate-900/60 dark:to-slate-800/40 shadow-2xs hover:border-emerald-500/30 transition-colors">
+            <div className="flex items-center gap-3 p-4 rounded-xl border border-border/70 dark:border-border/80 bg-gradient-to-br from-card via-emerald-500/5 to-accent/30 dark:from-slate-900/80 dark:via-emerald-950/30 dark:to-slate-800/40 shadow-2xs hover:border-emerald-500/30 transition-colors">
               <div className="p-2 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 <ShieldCheck className="size-4 shrink-0" />
               </div>
@@ -274,23 +274,23 @@ export default function LandingPage() {
       </section>
 
       {/* Social Proof & Performance Stats Section */}
-      <section className="w-full py-16 px-4 sm:px-6 border-t border-border/60 bg-card/20 dark:bg-slate-950/30">
+      <section className="w-full py-16 px-4 sm:px-6 border-t border-border/60 bg-gradient-to-b from-slate-100/60 via-card/40 to-slate-100/40 dark:from-[#090E1D]/50 dark:via-slate-950/40 dark:to-[#070B14]/60">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          <div className="space-y-1 p-4 rounded-xl bg-card/40 dark:bg-slate-900/50 border border-border/60">
-            <p className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">10x</p>
-            <p className="text-xs text-muted-foreground dark:text-slate-400 font-medium">Lebih Cepat Buat Caption</p>
+          <div className="space-y-1 p-5 rounded-2xl bg-card/70 dark:bg-slate-900/70 border border-border/70 dark:border-indigo-500/20 shadow-xs backdrop-blur-xs">
+            <p className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-cyan-400 tracking-tight">10x</p>
+            <p className="text-xs text-muted-foreground dark:text-slate-300 font-medium">Lebih Cepat Buat Caption</p>
           </div>
-          <div className="space-y-1 p-4 rounded-xl bg-card/40 dark:bg-slate-900/50 border border-border/60">
-            <p className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">6+</p>
-            <p className="text-xs text-muted-foreground dark:text-slate-400 font-medium">Platform Media Sosial</p>
+          <div className="space-y-1 p-5 rounded-2xl bg-card/70 dark:bg-slate-900/70 border border-border/70 dark:border-indigo-500/20 shadow-xs backdrop-blur-xs">
+            <p className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-300 tracking-tight">6+</p>
+            <p className="text-xs text-muted-foreground dark:text-slate-300 font-medium">Platform Media Sosial</p>
           </div>
-          <div className="space-y-1 p-4 rounded-xl bg-card/40 dark:bg-slate-900/50 border border-border/60">
-            <p className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">100%</p>
-            <p className="text-xs text-muted-foreground dark:text-slate-400 font-medium">Privasi & Kontrol Konten</p>
+          <div className="space-y-1 p-5 rounded-2xl bg-card/70 dark:bg-slate-900/70 border border-border/70 dark:border-indigo-500/20 shadow-xs backdrop-blur-xs">
+            <p className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-300 tracking-tight">100%</p>
+            <p className="text-xs text-muted-foreground dark:text-slate-300 font-medium">Privasi & Kontrol Konten</p>
           </div>
-          <div className="space-y-1 p-4 rounded-xl bg-card/40 dark:bg-slate-900/50 border border-border/60">
-            <p className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">0 IDR</p>
-            <p className="text-xs text-muted-foreground dark:text-slate-400 font-medium">Bisa Dimulai Gratis</p>
+          <div className="space-y-1 p-5 rounded-2xl bg-card/70 dark:bg-slate-900/70 border border-border/70 dark:border-indigo-500/20 shadow-xs backdrop-blur-xs">
+            <p className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-yellow-300 tracking-tight">0 IDR</p>
+            <p className="text-xs text-muted-foreground dark:text-slate-300 font-medium">Bisa Dimulai Gratis</p>
           </div>
         </div>
       </section>
