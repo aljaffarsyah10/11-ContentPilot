@@ -8,6 +8,18 @@ Aplikasi ini menggabungkan manajemen ide konten, generator caption & hashtag ber
 
 ---
 
+## 📸 Preview Tampilan Aplikasi
+
+### 🌟 Homepage & Hero Studio (Tema Gelap & Terang)
+
+| Tema Gelap (Dark Mode) | Tema Terang (Light Mode) |
+| :---: | :---: |
+| ![Homepage Dark Mode](public/docs/images/homepage-dark.png) | ![Homepage Light Mode](public/docs/images/homepage-light.png) |
+
+> _Tampilan antarmuka landing page dengan ambient glow multi-stop gradient, interactive calendar showcase card, tipografi modern Plus Jakarta Sans, dan dark mode yang kontras dan tajam._
+
+---
+
 ## 📌 Daftar Isi
 
 - [Fitur Utama](#-fitur-utama)
