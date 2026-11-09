@@ -1,5 +1,4 @@
 import React from "react";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export type ContentStatus = "DRAFT" | "SCHEDULED" | "PUBLISHED";
@@ -9,52 +8,64 @@ interface StatusBadgeProps {
   status: ContentStatus | IdeaStatus;
   type?: "content" | "idea";
   className?: string;
+  size?: "default" | "sm";
 }
 
-const statusConfig: Record<string, { label: string; className: string }> = {
+const statusConfig: Record<string, { label: string; dotColor: string; className: string }> = {
   // Content Status
   DRAFT: {
     label: "Draft",
-    className: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+    dotColor: "bg-slate-400 dark:bg-slate-500",
+    className: "bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20",
   },
   SCHEDULED: {
     label: "Scheduled",
-    className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
+    dotColor: "bg-indigo-500",
+    className: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/20",
   },
   PUBLISHED: {
     label: "Published",
-    className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800",
+    dotColor: "bg-emerald-500",
+    className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
   },
   // Idea Status
   NEW: {
     label: "Baru",
-    className: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800",
+    dotColor: "bg-blue-500",
+    className: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
   },
   IN_PROGRESS: {
     label: "Sedang Dibuat",
-    className: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
+    dotColor: "bg-amber-500",
+    className: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20",
   },
   USED: {
     label: "Sudah Dipakai",
-    className: "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700",
+    dotColor: "bg-teal-500",
+    className: "bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/20",
   },
   ARCHIVED: {
     label: "Arsip",
-    className: "bg-zinc-50 text-zinc-400 border-zinc-200 dark:bg-zinc-900 dark:text-zinc-500 dark:border-zinc-800",
+    dotColor: "bg-zinc-400",
+    className: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20",
   },
 };
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+export function StatusBadge({ status, className, size = "default" }: StatusBadgeProps) {
   const config = statusConfig[status];
   if (!config) return null;
 
   return (
-    <Badge
-      variant="outline"
-      className={cn("font-medium", config.className, className)}
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-md border font-medium select-none transition-colors",
+        size === "sm" ? "px-1.5 py-0.5 text-[11px]" : "px-2 py-0.5 text-xs",
+        config.className,
+        className
+      )}
     >
-      {config.label}
-    </Badge>
+      <span className={cn("rounded-full", size === "sm" ? "size-1" : "size-1.5", config.dotColor)} />
+      <span>{config.label}</span>
+    </span>
   );
 }
-

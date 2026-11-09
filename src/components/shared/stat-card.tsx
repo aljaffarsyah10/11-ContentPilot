@@ -21,27 +21,28 @@ export function StatCard({
   className,
 }: StatCardProps) {
   return (
-    <Card className={cn("overflow-hidden border-border bg-card", className)}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between space-y-0 pb-2">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <div className="rounded-lg bg-primary/10 p-2 text-primary">
+    <Card className={cn("overflow-hidden border-border/80 bg-card hover:border-border transition-all duration-150", className)}>
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
+          <div className="rounded-lg bg-accent p-2 text-foreground/80 border border-border/50">
             <Icon className="size-4" />
           </div>
         </div>
-        <div className="flex items-baseline space-x-2">
-          <div className="text-2xl font-bold tracking-tight text-foreground">{value}</div>
+        <div className="mt-3 flex items-baseline justify-between">
+          <div className="text-2xl font-bold tracking-tight text-foreground font-heading">
+            {value}
+          </div>
           {trend && (
-            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
               {trend}
             </span>
           )}
         </div>
         {description && (
-          <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+          <p className="mt-1 text-xs text-muted-foreground truncate">{description}</p>
         )}
       </CardContent>
     </Card>
   );
 }
-

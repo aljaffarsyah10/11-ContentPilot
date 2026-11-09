@@ -82,12 +82,12 @@ function CalendarView() {
     setCurrentDate(new Date());
   };
 
-  // Calendar days grid computation
+  // Generate calendar grid days
   const daysInGrid = useMemo(() => {
     if (viewMode === "month") {
       const monthStart = startOfMonth(currentDate);
       const monthEnd = endOfMonth(monthStart);
-      const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }); // Senin
+      const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
       const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
       return eachDayOfInterval({ start: startDate, end: endDate });
     } else {
@@ -99,9 +99,14 @@ function CalendarView() {
 
   const fetchEvents = useCallback(async () => {
     if (daysInGrid.length === 0) return;
+    setIsLoading(true);
+
+    const start = daysInGrid[0]?.toISOString();
+    const end = daysInGrid[daysInGrid.length - 1]?.toISOString();
+
+    if (!start || !end) return;
+
     try {
-      const start = daysInGrid[0].toISOString();
-      const end = daysInGrid[daysInGrid.length - 1].toISOString();
       const data = await api.calendar.getEvents({ startDate: start, endDate: end });
       setEvents(data || []);
       setError(null);
@@ -115,6 +120,8 @@ function CalendarView() {
 
   useEffect(() => {
     let isMounted = true;
+    if (daysInGrid.length === 0) return;
+
     const start = daysInGrid[0]?.toISOString();
     const end = daysInGrid[daysInGrid.length - 1]?.toISOString();
 
@@ -173,22 +180,22 @@ function CalendarView() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in-50 duration-150">
       <PageHeader
         title="Kalender Konten"
         description="Visualisasikan dan atur jadwal publikasi konten di seluruh saluran media sosial Anda."
       >
         <Link
           href="/contents/new"
-          className={buttonVariants({ size: "sm" })}
+          className={buttonVariants({ size: "sm", className: "shadow-xs h-9 gap-1.5" })}
         >
-          <Plus className="size-4 mr-1.5" />
-          Jadwalkan Konten
+          <Plus className="size-4" />
+          <span>Jadwalkan Konten</span>
         </Link>
       </PageHeader>
 
       {/* Calendar Toolbar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card p-4 rounded-xl border border-border shadow-xs">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-card p-3 sm:p-3.5 rounded-xl border border-border/80 shadow-2xs">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
             <Button
@@ -210,13 +217,13 @@ function CalendarView() {
               <ChevronRight className="size-4" />
             </Button>
           </div>
-          <span className="font-semibold text-lg text-foreground capitalize">
+          <span className="font-semibold text-base sm:text-lg text-foreground capitalize tracking-tight">
             {format(currentDate, "MMMM yyyy", { locale: idLocale })}
           </span>
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs text-primary font-medium cursor-pointer"
+            className="text-xs font-semibold cursor-pointer h-7 px-2.5 text-foreground hover:bg-accent"
             onClick={handleToday}
           >
             Hari Ini
@@ -224,11 +231,11 @@ function CalendarView() {
         </div>
 
         {/* View Switcher Tabs */}
-        <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
+        <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60">
           <Button
             variant={viewMode === "month" ? "default" : "ghost"}
             size="sm"
-            className="text-xs h-7 px-3 cursor-pointer"
+            className="text-xs h-7 px-3 cursor-pointer shadow-2xs font-medium"
             onClick={() => setViewMode("month")}
           >
             Bulan
@@ -236,7 +243,7 @@ function CalendarView() {
           <Button
             variant={viewMode === "week" ? "default" : "ghost"}
             size="sm"
-            className="text-xs h-7 px-3 cursor-pointer"
+            className="text-xs h-7 px-3 cursor-pointer shadow-2xs font-medium"
             onClick={() => setViewMode("week")}
           >
             Minggu
@@ -255,22 +262,22 @@ function CalendarView() {
         </div>
       ) : (
         /* Calendar Grid Container */
-        <Card className="overflow-hidden border-border bg-card shadow-xs">
+        <Card className="overflow-hidden border-border/80 bg-card shadow-2xs">
           <CardContent className="p-0">
             {/* Day Names Header */}
-            <div className="grid grid-cols-7 border-b border-border bg-muted/40 text-center text-xs font-semibold text-muted-foreground py-2.5">
+            <div className="grid grid-cols-7 border-b border-border/70 bg-muted/30 text-center text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5">
               <div>Senin</div>
               <div>Selasa</div>
               <div>Rabu</div>
               <div>Kamis</div>
               <div>Jumat</div>
-              <div className="text-primary font-bold">Sabtu</div>
-              <div className="text-destructive font-bold">Minggu</div>
+              <div className="text-foreground">Sabtu</div>
+              <div className="text-rose-600 dark:text-rose-400">Minggu</div>
             </div>
 
             {/* Days Grid Cells */}
             <div
-              className={`grid grid-cols-7 divide-x divide-y divide-border ${
+              className={`grid grid-cols-7 divide-x divide-y divide-border/60 ${
                 viewMode === "month" ? "min-h-[640px]" : "min-h-[380px]"
               }`}
             >
@@ -285,15 +292,15 @@ function CalendarView() {
                     key={day.toISOString()}
                     onClick={() => handleCellClick(day)}
                     className={`group relative flex flex-col p-2 transition-colors cursor-pointer min-h-[100px] ${
-                      !isCurrentMonth ? "bg-muted/15 text-muted-foreground/40" : "bg-card hover:bg-muted/30"
+                      !isCurrentMonth ? "bg-muted/15 text-muted-foreground/40" : "bg-card hover:bg-muted/25"
                     }`}
                   >
                     {/* Date Number Badge */}
                     <div className="flex items-center justify-between mb-1.5">
                       <span
-                        className={`inline-flex size-6 items-center justify-center rounded-full text-xs font-medium ${
+                        className={`inline-flex size-6 items-center justify-center rounded-md text-xs font-semibold ${
                           isTodayCell
-                            ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                            ? "bg-foreground text-background font-bold shadow-xs"
                             : isCurrentMonth
                             ? "text-foreground"
                             : "text-muted-foreground/50"
@@ -303,7 +310,7 @@ function CalendarView() {
                       </span>
 
                       {/* Hover Plus Button */}
-                      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-primary text-[10px] font-medium flex items-center gap-0.5">
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-foreground/70 text-[10px] font-medium flex items-center gap-0.5">
                         <Plus className="size-3" />
                       </span>
                     </div>
@@ -322,9 +329,9 @@ function CalendarView() {
                               e.stopPropagation();
                               setSelectedEvent(event);
                             }}
-                            className="group/chip flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors truncate"
+                            className="group/chip flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium bg-accent text-foreground border border-border/80 hover:bg-accent/80 transition-colors truncate shadow-2xs"
                           >
-                            <span className="size-1.5 rounded-full bg-primary shrink-0" />
+                            <span className="size-1.5 rounded-full bg-indigo-500 shrink-0" />
                             <span className="truncate">{event.title}</span>
                           </div>
                         ))
@@ -345,85 +352,103 @@ function CalendarView() {
 
       {/* Event Detail Modal */}
       <Dialog open={Boolean(selectedEvent)} onOpenChange={(open) => !open && setSelectedEvent(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-2 mb-1">
-              {selectedEvent && <PlatformBadge platform={selectedEvent.platform} />}
-              {selectedEvent && <StatusBadge status={selectedEvent.status} />}
+        <DialogContent className="sm:max-w-md border-border/80">
+          <DialogHeader className="space-y-2">
+            <div className="flex items-center gap-2">
+              {selectedEvent && <PlatformBadge platform={selectedEvent.platform} size="sm" />}
+              {selectedEvent && <StatusBadge status={selectedEvent.status} size="sm" />}
             </div>
-            <DialogTitle className="text-lg leading-snug">{selectedEvent?.title}</DialogTitle>
-            <DialogDescription className="text-xs flex items-center gap-1.5 pt-1">
-              <Clock className="size-3 text-muted-foreground" />
-              {selectedEvent?.scheduledAt
-                ? format(new Date(selectedEvent.scheduledAt), "EEEE, d MMMM yyyy 'pukul' HH:mm", {
-                    locale: idLocale,
-                  })
-                : "Belum terjadwal"}
+            <DialogTitle className="text-base sm:text-lg font-semibold leading-snug">{selectedEvent?.title}</DialogTitle>
+            <DialogDescription className="text-xs flex items-center gap-1.5 pt-0.5">
+              <Clock className="size-3.5 text-muted-foreground" />
+              <span>
+                {selectedEvent?.scheduledAt
+                  ? format(new Date(selectedEvent.scheduledAt), "EEEE, d MMMM yyyy 'pukul' HH:mm", {
+                      locale: idLocale,
+                    })
+                  : "Jadwal belum ditentukan"}
+              </span>
             </DialogDescription>
           </DialogHeader>
 
           {selectedEvent?.caption && (
-            <div className="rounded-lg bg-muted/40 p-3 text-xs text-foreground/90 whitespace-pre-line border border-border">
-              {selectedEvent.caption}
+            <div className="space-y-1.5 py-2">
+              <label className="text-xs font-semibold text-foreground">Caption Konten</label>
+              <div className="max-h-40 overflow-y-auto rounded-lg border border-border/80 bg-muted/30 p-3 text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                {selectedEvent.caption}
+              </div>
             </div>
           )}
 
           {selectedEvent?.hashtags && selectedEvent.hashtags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {selectedEvent.hashtags.map((h: string) => (
+            <div className="flex flex-wrap gap-1 pt-1">
+              {selectedEvent.hashtags.map((h, i) => (
                 <span
-                  key={h}
-                  className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                  key={i}
+                  className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-medium text-muted-foreground border border-border/60"
                 >
-                  #{h}
+                  #{h.replace(/^#/, "")}
                 </span>
               ))}
             </div>
           )}
 
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setSelectedEvent(null)}>
+          <DialogFooter className="flex flex-row justify-between sm:justify-between items-center gap-2 pt-3 border-t border-border/50">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedEvent(null)}
+              className="text-xs h-8"
+            >
               Tutup
             </Button>
             {selectedEvent && (
               <Link
                 href={`/contents/${selectedEvent.id}`}
-                className={buttonVariants({ size: "sm" })}
+                className={buttonVariants({ size: "sm", className: "text-xs h-8 gap-1.5 shadow-xs" })}
               >
-                <Edit className="size-3.5 mr-1.5" />
-                Edit Konten
+                <Edit className="size-3.5" />
+                <span>Buka Detail & Edit</span>
               </Link>
             )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Quick Schedule Date Click Dialog */}
+      {/* Quick Create Prompt on Empty Date Cell Click */}
       <Dialog
         open={Boolean(selectedDateForCreate)}
         onOpenChange={(open) => !open && setSelectedDateForCreate(null)}
       >
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-sm border-border/80">
           <DialogHeader>
-            <DialogTitle>Jadwalkan Konten</DialogTitle>
-            <DialogDescription>
-              Buat materi konten baru yang ditayangkan pada tanggal:
+            <DialogTitle className="text-base font-semibold">Jadwalkan Konten</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Apakah Anda ingin merencanakan konten baru untuk tanggal{" "}
+              <span className="font-semibold text-foreground">
+                {selectedDateForCreate
+                  ? format(selectedDateForCreate, "EEEE, d MMMM yyyy", { locale: idLocale })
+                  : ""}
+              </span>
+              ?
             </DialogDescription>
           </DialogHeader>
-          <div className="py-2 text-center">
-            <p className="text-base font-semibold text-primary">
-              {selectedDateForCreate
-                ? format(selectedDateForCreate, "EEEE, d MMMM yyyy", { locale: idLocale })
-                : ""}
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedDateForCreate(null)}>
+          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedDateForCreate(null)}
+              className="text-xs h-8"
+            >
               Batal
             </Button>
-            <Button onClick={handleProceedToCreate} className="cursor-pointer">
-              Lanjut ke Editor
-              <ArrowRight className="size-4 ml-1.5" />
+            <Button
+              size="sm"
+              onClick={handleProceedToCreate}
+              className="text-xs h-8 gap-1.5 shadow-xs"
+            >
+              <span>Lanjut ke Formulir</span>
+              <ArrowRight className="size-3.5" />
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -436,8 +461,10 @@ export default function CalendarPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-8 text-center text-sm text-muted-foreground">
-          Memuat kalender konten...
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-12 w-full rounded-xl" />
+          <Skeleton className="h-[500px] w-full rounded-xl" />
         </div>
       }
     >

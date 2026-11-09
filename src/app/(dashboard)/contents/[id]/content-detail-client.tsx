@@ -80,10 +80,10 @@ export function ContentDetailClient() {
     setIsDuplicating(true);
     try {
       const duplicated = await api.contents.duplicate(id);
-      toast.success("Konten berhasil digandakan sebagai draf baru!");
+      toast.success(`Konten "${duplicated.title}" berhasil digandakan!`);
       router.push(`/contents/${duplicated.id}`);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Gagal menggandakan konten.";
+      const msg = err instanceof Error ? err.message : "Gagal menduplikasi konten.";
       toast.error(msg);
     } finally {
       setIsDuplicating(false);
@@ -95,7 +95,7 @@ export function ContentDetailClient() {
     handleSubmit,
     control,
     reset,
-    formState: { isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -112,39 +112,42 @@ export function ContentDetailClient() {
   const watchedCaption = useWatch({ control, name: "caption" }) || "";
 
   useEffect(() => {
-    if (!id) return;
     let isMounted = true;
     api.contents
       .get(id)
       .then((data) => {
-        if (!isMounted) return;
-        setContent(data);
-        let formattedDate = "";
-        if (data.scheduledAt) {
-          try {
-            const d = new Date(data.scheduledAt);
-            formattedDate = d.toISOString().slice(0, 16);
-          } catch {
-            // ignore
+        if (isMounted) {
+          setContent(data);
+          setError(null);
+          setIsLoading(false);
+
+          let formattedDate = "";
+          if (data.scheduledAt) {
+            try {
+              const d = new Date(data.scheduledAt);
+              formattedDate = format(d, "yyyy-MM-dd'T'HH:mm");
+            } catch {
+              formattedDate = "";
+            }
           }
+
+          reset({
+            title: data.title,
+            caption: data.caption || "",
+            hashtags: data.hashtags ? data.hashtags.map((h) => `#${h}`).join(" ") : "",
+            platform: data.platform,
+            status: data.status,
+            scheduledAt: formattedDate,
+            notes: data.notes || "",
+          });
         }
-        reset({
-          title: data.title,
-          caption: data.caption || "",
-          hashtags: (data.hashtags || []).map((h: string) => `#${h}`).join(" "),
-          platform: data.platform,
-          status: data.status,
-          scheduledAt: formattedDate,
-          notes: data.notes || "",
-        });
-        setError(null);
-        setIsLoading(false);
       })
       .catch((err: unknown) => {
-        if (!isMounted) return;
-        const msg = err instanceof Error ? err.message : "Konten tidak ditemukan.";
-        setError(msg);
-        setIsLoading(false);
+        if (isMounted) {
+          const msg = err instanceof Error ? err.message : "Gagal memuat detail konten.";
+          setError(msg);
+          setIsLoading(false);
+        }
       });
 
     return () => {
@@ -217,12 +220,12 @@ export function ContentDetailClient() {
       <div className="space-y-6">
         <Link
           href="/contents"
-          className={buttonVariants({ variant: "ghost", size: "sm", className: "-ml-2" })}
+          className={buttonVariants({ variant: "ghost", size: "sm", className: "-ml-2 h-8 text-xs text-muted-foreground" })}
         >
-          <ArrowLeft className="size-4 mr-1" />
+          <ArrowLeft className="size-3.5 mr-1" />
           Kembali ke Daftar Konten
         </Link>
-        <div className="rounded-xl border border-border bg-card p-8">
+        <div className="rounded-xl border border-border/80 bg-card p-6 shadow-2xs">
           <EmptyState
             icon={FileText}
             title="Konten Tidak Ditemukan"
@@ -236,7 +239,7 @@ export function ContentDetailClient() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-5xl animate-in fade-in-50 duration-150">
       {/* Top back button and action buttons */}
       <div className="flex items-center justify-between">
         <Link
@@ -244,62 +247,61 @@ export function ContentDetailClient() {
           className={buttonVariants({
             variant: "ghost",
             size: "sm",
-            className: "-ml-2 text-muted-foreground",
+            className: "-ml-2 text-muted-foreground hover:text-foreground h-8 text-xs",
           })}
         >
-          <ArrowLeft className="size-4 mr-1" />
-          Kembali ke Daftar Konten
+          <ArrowLeft className="size-3.5 mr-1" />
+          <span>Kembali ke Daftar Konten</span>
         </Link>
+
         <div className="flex items-center gap-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
-            disabled={isDuplicating}
-            className="cursor-pointer"
             onClick={handleDuplicate}
+            disabled={isDuplicating}
+            className="text-xs h-8 gap-1.5 shadow-2xs"
           >
             {isDuplicating ? (
-              <Loader2 className="size-4 mr-1.5 animate-spin" />
+              <Loader2 className="size-3.5 animate-spin" />
             ) : (
-              <Copy className="size-4 mr-1.5" />
+              <Copy className="size-3.5" />
             )}
-            Duplikasi Konten
+            <span>Duplikasi</span>
           </Button>
           <Button
             type="button"
             variant="destructive"
             size="sm"
-            className="cursor-pointer"
             onClick={() => setDeleteDialogOpen(true)}
+            className="text-xs h-8 gap-1.5 shadow-xs"
           >
-            <Trash2 className="size-4 mr-1.5" />
-            Hapus Konten
+            <Trash2 className="size-3.5" />
+            <span>Hapus</span>
           </Button>
         </div>
       </div>
 
       <PageHeader
         title={content.title}
-        description={`Terakhir diperbarui: ${format(
-            new Date(content.updatedAt),
-            "d MMMM yyyy, HH:mm",
-            { locale: idLocale }
-        )}`}
+        description={`Terakhir diperbarui pada ${format(new Date(content.updatedAt), "d MMMM yyyy, HH:mm", { locale: idLocale })}`}
       >
         <div className="flex items-center gap-2">
-          <PlatformBadge platform={content.platform} />
-          <StatusBadge status={content.status} />
+          <PlatformBadge platform={content.platform} size="sm" />
+          <StatusBadge status={content.status} size="sm" />
         </div>
       </PageHeader>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {/* Main Editor (8 cols) */}
+        {/* Main Editor Column (8 cols) */}
         <div className="lg:col-span-8 space-y-6">
           {/* Platform Selector Grid */}
-          <Card>
+          <Card className="border-border/80 shadow-2xs">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Platform Target</CardTitle>
+              <CardTitle className="text-sm font-semibold text-foreground">
+                Platform Media Sosial
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <Controller
@@ -314,21 +316,21 @@ export function ContentDetailClient() {
                           type="button"
                           key={p}
                           onClick={() => field.onChange(p)}
-                          className={`flex items-center justify-between p-3 rounded-lg border text-left transition-all cursor-pointer ${
+                          className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
                             isSelected
-                              ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-xs"
-                              : "border-border hover:bg-muted/50"
+                              ? "border-foreground bg-accent ring-1 ring-foreground/20 shadow-2xs"
+                              : "border-border/80 bg-card hover:bg-muted/40"
                           }`}
                         >
-                          <PlatformBadge platform={p} />
+                          <PlatformBadge platform={p} size="sm" />
                           <span
                             className={`size-3.5 rounded-full border flex items-center justify-center ${
                               isSelected
-                                ? "border-primary bg-primary text-primary-foreground"
+                                ? "border-foreground bg-foreground text-background"
                                 : "border-muted-foreground/30"
                             }`}
                           >
-                            {isSelected && <span className="size-1.5 rounded-full bg-white" />}
+                            {isSelected && <span className="size-1.5 rounded-full bg-background" />}
                           </span>
                         </button>
                       );
@@ -340,42 +342,45 @@ export function ContentDetailClient() {
           </Card>
 
           {/* Title & Caption */}
-          <Card>
+          <Card className="border-border/80 shadow-2xs">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Materi Konten</CardTitle>
+              <CardTitle className="text-sm font-semibold text-foreground">Isi & Naskah Konten</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="title">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground" htmlFor="title">
                   Judul Konten
                 </label>
-                <Input id="title" {...register("title")} />
+                <Input id="title" className="h-9 text-xs sm:text-sm" {...register("title")} />
+                {errors.title && (
+                  <p className="text-[11px] font-medium text-destructive">{errors.title.message}</p>
+                )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium" htmlFor="caption">
+                  <label className="text-xs font-semibold text-foreground" htmlFor="caption">
                     Caption Teks
                   </label>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[11px] text-muted-foreground">
                     {watchedCaption.length} karakter
                   </span>
                 </div>
-                <Textarea id="caption" rows={7} {...register("caption")} />
+                <Textarea id="caption" rows={7} className="text-xs sm:text-sm leading-relaxed" {...register("caption")} />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="hashtags">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground" htmlFor="hashtags">
                   Hashtag
                 </label>
-                <Input id="hashtags" {...register("hashtags")} />
+                <Input id="hashtags" className="h-9 text-xs sm:text-sm" {...register("hashtags")} />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="notes">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground" htmlFor="notes">
                   Catatan Internal
                 </label>
-                <Input id="notes" {...register("notes")} />
+                <Input id="notes" className="h-9 text-xs sm:text-sm" {...register("notes")} />
               </div>
             </CardContent>
           </Card>
@@ -383,41 +388,41 @@ export function ContentDetailClient() {
 
         {/* Sidebar Settings (4 cols) */}
         <div className="lg:col-span-4 space-y-6">
-          <Card>
+          <Card className="border-border/80 shadow-2xs">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Publikasi & Jadwal</CardTitle>
+              <CardTitle className="text-sm font-semibold text-foreground">Publikasi & Jadwal</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status Konten</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Status Konten</label>
                 <select
                   {...register("status")}
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="w-full h-9 rounded-lg border border-input/90 bg-card/60 px-3 py-1.5 text-xs text-foreground shadow-2xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 cursor-pointer"
                 >
-                  <option value="DRAFT">DRAFT</option>
-                  <option value="SCHEDULED">SCHEDULED</option>
-                  <option value="PUBLISHED">PUBLISHED</option>
+                  <option value="DRAFT" className="bg-popover text-popover-foreground">DRAFT</option>
+                  <option value="SCHEDULED" className="bg-popover text-popover-foreground">SCHEDULED</option>
+                  <option value="PUBLISHED" className="bg-popover text-popover-foreground">PUBLISHED</option>
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-1.5" htmlFor="scheduledAt">
-                  <Calendar className="size-4 text-primary" />
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5" htmlFor="scheduledAt">
+                  <Calendar className="size-3.5 text-indigo-500" />
                   Waktu Tayang Publikasi
                 </label>
                 <Input
                   id="scheduledAt"
                   type="datetime-local"
                   {...register("scheduledAt")}
-                  className="text-xs"
+                  className="text-xs h-9"
                 />
               </div>
 
-              <div className="pt-4 flex flex-col gap-2">
-                <Button type="submit" disabled={isSubmitting} className="w-full cursor-pointer">
+              <div className="pt-2 flex flex-col gap-2">
+                <Button type="submit" disabled={isSubmitting} className="w-full h-9 font-semibold text-xs shadow-xs">
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="size-4 animate-spin mr-2" />
+                      <Loader2 className="size-3.5 animate-spin mr-2" />
                       Menyimpan...
                     </>
                   ) : (
@@ -426,7 +431,7 @@ export function ContentDetailClient() {
                 </Button>
                 <Link
                   href="/contents"
-                  className={buttonVariants({ variant: "outline", className: "w-full" })}
+                  className={buttonVariants({ variant: "outline", size: "sm", className: "w-full h-9 text-xs font-medium" })}
                 >
                   Batal
                 </Link>
@@ -438,23 +443,23 @@ export function ContentDetailClient() {
 
       {/* Delete Confirmation Alert Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="border-border/80">
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Materi Konten Ini?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Konten &quot;{content.title}&quot; akan dihapus secara permanen dari sistem.
+            <AlertDialogTitle className="text-base font-semibold">Hapus Materi Konten Ini?</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground">
+              Konten &quot;{content.title}&quot; akan dihapus secara permanen dari sistem. Tindakan ini tidak dapat dibatalkan.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting} className="h-8 text-xs">Batal</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 h-8 text-xs"
             >
               {isDeleting ? (
                 <>
-                  <Loader2 className="size-4 animate-spin mr-1.5" />
+                  <Loader2 className="size-3.5 animate-spin mr-1.5" />
                   Menghapus...
                 </>
               ) : (
@@ -467,4 +472,3 @@ export function ContentDetailClient() {
     </form>
   );
 }
-

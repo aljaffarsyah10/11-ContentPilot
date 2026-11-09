@@ -18,7 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -60,68 +60,86 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="border-border/60 shadow-sm">
-      <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold tracking-tight">Masuk ke Akun</CardTitle>
-        <CardDescription>
+    <Card className="border-border/80 bg-card shadow-[0_4px_20px_0_rgba(0,0,0,0.04)] dark:shadow-none">
+      <CardHeader className="space-y-1.5 text-center pb-2">
+        <div className="flex justify-center mb-2">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-foreground text-background shadow-xs">
+            <Sparkles className="size-4.5" />
+          </div>
+        </div>
+        <CardTitle className="text-xl font-bold tracking-tight text-foreground">
+          Masuk ke Akun
+        </CardTitle>
+        <CardDescription className="text-xs text-muted-foreground">
           Masukkan email dan kata sandi Anda untuk mengakses dashboard
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-2">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium leading-none" htmlFor="email">
-              Email
+            <label className="text-xs font-semibold text-foreground leading-none" htmlFor="email">
+              Alamat Email
             </label>
             <Input
               id="email"
               type="email"
               placeholder="nama@domain.com"
               disabled={isLoading}
+              className="h-9 text-xs sm:text-sm"
               {...register("email")}
             />
             {errors.email && (
-              <p className="text-xs text-destructive">{errors.email.message}</p>
+              <p className="text-[11px] font-medium text-destructive">{errors.email.message}</p>
             )}
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium leading-none" htmlFor="password">
+              <label className="text-xs font-semibold text-foreground leading-none" htmlFor="password">
                 Kata Sandi
               </label>
-              <span className="text-xs text-muted-foreground">Lupa kata sandi?</span>
             </div>
             <Input
               id="password"
               type="password"
               placeholder="••••••••"
               disabled={isLoading}
+              className="h-9 text-xs sm:text-sm"
               {...register("password")}
             />
             {errors.password && (
-              <p className="text-xs text-destructive">{errors.password.message}</p>
+              <p className="text-[11px] font-medium text-destructive">{errors.password.message}</p>
             )}
           </div>
-          <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-3 pt-2">
+          <Button
+            type="submit"
+            className="w-full h-9 font-semibold text-xs shadow-xs"
+            disabled={isLoading}
+          >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
-                Memproses Masuk...
+                <Loader2 className="mr-2 size-3.5 animate-spin" />
+                Memverifikasi...
               </>
             ) : (
-              "Masuk ke Dashboard"
+              <>
+                Masuk ke Workspace
+                <ArrowRight className="ml-1.5 size-3.5" />
+              </>
             )}
           </Button>
-        </CardContent>
+          <div className="text-center text-xs text-muted-foreground">
+            Belum memiliki akun?{" "}
+            <Link
+              href="/register"
+              className="font-semibold text-foreground underline underline-offset-4 hover:text-foreground/80 transition-colors"
+            >
+              Daftar sekarang
+            </Link>
+          </div>
+        </CardFooter>
       </form>
-      <CardFooter className="flex justify-center border-t border-border/40 pt-4">
-        <p className="text-xs text-muted-foreground">
-          Belum memiliki akun?{" "}
-          <Link href="/register" className="font-semibold text-primary hover:underline">
-            Daftar sekarang
-          </Link>
-        </p>
-      </CardFooter>
     </Card>
   );
 }

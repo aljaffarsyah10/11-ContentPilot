@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -16,25 +16,25 @@ import {
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Sidebar } from "@/components/layout/sidebar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { Menu, Plus, User, LogOut } from "lucide-react";
+import { Menu, Plus, User, LogOut, Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const routeTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
-  "/calendar": "Content Calendar",
-  "/contents": "Content Management",
+  "/calendar": "Kalender Konten",
+  "/contents": "Manajemen Konten",
   "/contents/new": "Buat Konten Baru",
-  "/ideas": "Content Ideas",
-  "/ai-generator": "AI Caption Generator",
-  "/settings": "Settings",
+  "/ideas": "Backlog Ide Konten",
+  "/ai-generator": "AI Caption Studio",
+  "/settings": "Pengaturan Akun",
 };
 
 export function Topbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [openMobile, setOpenMobile] = useState(false);
   const { data: session } = useSession();
 
-  // Determine page title
   let currentTitle = "ContentPilot";
   for (const [route, title] of Object.entries(routeTitles)) {
     if (pathname === route || (route !== "/dashboard" && pathname.startsWith(route))) {
@@ -57,7 +57,7 @@ export function Topbar() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-border/80 bg-background/80 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 sm:px-6">
       {/* Left: Mobile Toggle & Page Title */}
       <div className="flex items-center gap-3">
         {/* Mobile Nav Sheet */}
@@ -66,77 +66,89 @@ export function Topbar() {
             className={buttonVariants({
               variant: "ghost",
               size: "icon",
-              className: "lg:hidden cursor-pointer",
+              className: "lg:hidden cursor-pointer size-8",
             })}
-            aria-label="Buka Menu"
+            aria-label="Buka Navigasi Mobile"
           >
-            <Menu className="size-5" />
+            <Menu className="size-4" />
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-72">
+          <SheetContent side="left" className="w-64 p-0">
             <SheetTitle className="sr-only">Navigasi Utama</SheetTitle>
             <Sidebar onNavigate={() => setOpenMobile(false)} />
           </SheetContent>
         </Sheet>
 
-        <h1 className="text-base font-semibold text-foreground sm:text-lg">
-          {currentTitle}
-        </h1>
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-foreground tracking-tight sm:text-base">
+            {currentTitle}
+          </h2>
+        </div>
       </div>
 
-      {/* Right: Quick Actions & Profile Dropdown */}
+      {/* Right: Quick Action, Theme Toggle, & User Menu */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Quick Action: Buat Konten */}
         <Link
           href="/contents/new"
           className={buttonVariants({
             size: "sm",
-            className: "hidden sm:inline-flex items-center",
+            className: "hidden sm:inline-flex shadow-xs font-medium h-8",
           })}
         >
-          <Plus className="size-4 mr-1.5" />
+          <Plus className="size-3.5 mr-1.5" />
           <span>Buat Konten</span>
         </Link>
 
-        {/* Theme Mode Toggle */}
+        {/* Quick Action: AI Generator */}
+        <Link
+          href="/ai-generator"
+          className={buttonVariants({
+            variant: "outline",
+            size: "sm",
+            className: "hidden md:inline-flex h-8 shadow-2xs",
+          })}
+        >
+          <Sparkles className="size-3.5 mr-1.5 text-indigo-500" />
+          <span>AI Caption</span>
+        </Link>
+
+        {/* Theme Toggle */}
         <ThemeToggle />
 
         {/* User Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger
-            className={buttonVariants({
-              variant: "ghost",
-              size: "icon",
-              className: "rounded-full size-8 cursor-pointer p-0",
-            })}
+            className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+            aria-label="Menu Pengguna"
           >
-            <Avatar className="size-8">
-              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                {userInitials || "CP"}
+            <Avatar className="size-8 border border-border/80">
+              <AvatarFallback className="text-xs font-semibold bg-accent text-foreground">
+                {userInitials}
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-56 mt-1 shadow-md border-border/80">
+            <DropdownMenuLabel className="font-normal p-3">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none truncate">{userName}</p>
-                <p className="text-xs leading-none text-muted-foreground truncate">
-                  {userEmail}
-                </p>
+                <p className="text-sm font-semibold leading-none text-foreground">{userName}</p>
+                <p className="text-xs leading-none text-muted-foreground truncate">{userEmail}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Link href="/settings" className="flex items-center w-full px-2 py-1.5 cursor-pointer">
-                <User className="size-4 mr-2" />
-                <span>Pengaturan Akun</span>
-              </Link>
+            <DropdownMenuItem
+              onClick={() => router.push("/settings")}
+              className="cursor-pointer text-xs py-2"
+            >
+              <User className="mr-2 size-4 text-muted-foreground" />
+              <span>Pengaturan Profil</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleSignOut}
-              className="flex items-center w-full px-2 py-1.5 cursor-pointer text-destructive focus:text-destructive"
+              className="cursor-pointer text-xs py-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
             >
-              <LogOut className="size-4 mr-2" />
-              <span>Keluar</span>
+              <LogOut className="mr-2 size-4" />
+              <span>Keluar (Sign Out)</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

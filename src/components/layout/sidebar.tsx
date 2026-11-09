@@ -30,30 +30,34 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "flex h-full flex-col justify-between border-r border-border bg-card p-4",
+        "flex h-full flex-col justify-between border-r border-sidebar-border bg-sidebar px-3.5 py-4 select-none",
         className
       )}
     >
       <div className="space-y-6">
         {/* Brand / Logo */}
-        <div className="flex items-center gap-2 px-2 py-1">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-            <Sparkles className="size-5" />
+        <Link
+          href="/dashboard"
+          onClick={onNavigate}
+          className="flex items-center gap-2.5 px-2 py-1 group transition-opacity hover:opacity-90"
+        >
+          <div className="flex size-8 items-center justify-center rounded-lg bg-foreground text-background shadow-xs">
+            <Sparkles className="size-4" />
           </div>
-          <div>
-            <span className="font-bold tracking-tight text-foreground text-lg">
+          <div className="flex flex-col">
+            <span className="font-bold tracking-tight text-foreground text-base leading-none">
               ContentPilot
             </span>
-            <span className="block text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
-              Social SaaS
+            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mt-1">
+              Social Studio
             </span>
           </div>
-        </div>
+        </Link>
 
         {/* Main Navigation */}
         <div className="space-y-1">
-          <p className="px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-            Menu Utama
+          <p className="px-2.5 text-[11px] font-semibold text-muted-foreground/80 uppercase tracking-wider mb-2">
+            Workspace
           </p>
           <nav className="space-y-1">
             {mainNavItems.map((item) => {
@@ -69,14 +73,56 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
                   href={item.href}
                   onClick={onNavigate}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-150",
                     isActive
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      ? "bg-accent text-foreground font-semibold shadow-2xs"
+                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                   )}
                 >
-                  <Icon className={cn("size-4", isActive ? "text-primary" : "text-muted-foreground")} />
-                  <span>{item.title}</span>
+                  <Icon
+                    className={cn(
+                      "size-4 shrink-0 transition-colors",
+                      isActive ? "text-foreground" : "text-muted-foreground"
+                    )}
+                  />
+                  <span className="truncate">{item.title}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <Separator className="bg-border/60" />
+
+        {/* Secondary Navigation */}
+        <div className="space-y-1">
+          <p className="px-2.5 text-[11px] font-semibold text-muted-foreground/80 uppercase tracking-wider mb-2">
+            Pengaturan
+          </p>
+          <nav className="space-y-1">
+            {secondaryNavItems.map((item) => {
+              const isActive = pathname.startsWith(item.href);
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onNavigate}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-150",
+                    isActive
+                      ? "bg-accent text-foreground font-semibold shadow-2xs"
+                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                  )}
+                >
+                  <Icon
+                    className={cn(
+                      "size-4 shrink-0 transition-colors",
+                      isActive ? "text-foreground" : "text-muted-foreground"
+                    )}
+                  />
+                  <span className="truncate">{item.title}</span>
                 </Link>
               );
             })}
@@ -84,41 +130,19 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
         </div>
       </div>
 
-      {/* Footer / Secondary Navigation */}
-      <div className="space-y-3 pt-4">
-        <Separator />
-        <div className="space-y-1">
-          {secondaryNavItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
-            const Icon = item.icon;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onNavigate}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <Icon className="size-4" />
-                <span>{item.title}</span>
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* User Card */}
-        <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-muted/40 p-2.5">
-          <div className="size-8 rounded-full bg-primary/20 text-primary font-semibold flex items-center justify-center text-xs">
-            {userInitials || "CP"}
+      {/* User Profile Mini Block */}
+      <div className="pt-4 border-t border-border/60">
+        <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg bg-card/60 border border-border/50">
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-foreground/10 text-xs font-semibold text-foreground">
+            {userInitials}
           </div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-xs font-medium text-foreground truncate">{userName}</p>
-            <p className="text-[11px] text-muted-foreground truncate">{userEmail}</p>
+          <div className="flex flex-col min-w-0">
+            <span className="truncate text-xs font-medium text-foreground leading-tight">
+              {userName}
+            </span>
+            <span className="truncate text-[11px] text-muted-foreground leading-tight">
+              {userEmail}
+            </span>
           </div>
         </div>
       </div>

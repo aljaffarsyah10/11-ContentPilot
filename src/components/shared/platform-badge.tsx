@@ -1,5 +1,4 @@
 import React from "react";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export type SocialPlatform =
@@ -14,9 +13,10 @@ interface PlatformBadgeProps {
   platform: SocialPlatform;
   showIcon?: boolean;
   className?: string;
+  size?: "default" | "sm";
 }
 
-// Clean SVG Icons for Social Platforms
+// Crisp Minimal SVG Icons
 function InstagramIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -78,32 +78,38 @@ const platformConfig: Record<
   INSTAGRAM: {
     label: "Instagram",
     icon: InstagramIcon,
-    className: "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/40 dark:text-pink-300 dark:border-pink-800",
-  },
-  FACEBOOK: {
-    label: "Facebook",
-    icon: FacebookIcon,
-    className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
+    className:
+      "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20",
   },
   TIKTOK: {
     label: "TikTok",
     icon: TikTokIcon,
-    className: "bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700",
+    className:
+      "bg-slate-900/10 text-slate-800 dark:bg-white/10 dark:text-slate-200 border-slate-900/20 dark:border-white/20",
   },
   LINKEDIN: {
     label: "LinkedIn",
     icon: LinkedinIcon,
-    className: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800",
+    className:
+      "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20",
+  },
+  FACEBOOK: {
+    label: "Facebook",
+    icon: FacebookIcon,
+    className:
+      "bg-blue-600/10 text-blue-700 dark:text-blue-300 border-blue-600/20",
   },
   X: {
     label: "X",
     icon: XIcon,
-    className: "bg-zinc-100 text-zinc-800 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700",
+    className:
+      "bg-zinc-500/10 text-zinc-800 dark:text-zinc-200 border-zinc-500/20",
   },
   YOUTUBE: {
     label: "YouTube",
     icon: YoutubeIcon,
-    className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800",
+    className:
+      "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20",
   },
 };
 
@@ -111,6 +117,7 @@ export function PlatformBadge({
   platform,
   showIcon = true,
   className,
+  size = "default",
 }: PlatformBadgeProps) {
   const config = platformConfig[platform];
   if (!config) return null;
@@ -118,12 +125,16 @@ export function PlatformBadge({
   const Icon = config.icon;
 
   return (
-    <Badge
-      variant="outline"
-      className={cn("inline-flex items-center gap-1 font-medium", config.className, className)}
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-md border font-medium transition-colors select-none",
+        size === "sm" ? "px-1.5 py-0.5 text-[11px]" : "px-2 py-0.5 text-xs",
+        config.className,
+        className
+      )}
     >
-      {showIcon && <Icon className="size-3" />}
+      {showIcon && <Icon className={cn(size === "sm" ? "size-3" : "size-3.5")} />}
       <span>{config.label}</span>
-    </Badge>
+    </span>
   );
 }

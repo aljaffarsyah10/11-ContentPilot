@@ -78,76 +78,90 @@ function NewContentForm() {
     const prefillTitle = searchParams.get("title");
     const prefillCaption = searchParams.get("caption");
     const prefillHashtags = searchParams.get("hashtags");
-    const prefillPlatform = searchParams.get("platform") as SocialPlatform;
+    const prefillPlatform = searchParams.get("platform");
     const prefillDate = searchParams.get("date");
 
     if (prefillTitle) setValue("title", prefillTitle);
     if (prefillCaption) setValue("caption", prefillCaption);
     if (prefillHashtags) setValue("hashtags", prefillHashtags);
-    if (prefillPlatform && platformOptions.includes(prefillPlatform)) {
-      setValue("platform", prefillPlatform);
+    if (
+      prefillPlatform &&
+      platformOptions.includes(prefillPlatform as SocialPlatform)
+    ) {
+      setValue("platform", prefillPlatform as SocialPlatform);
     }
     if (prefillDate) {
-      setValue("scheduledAt", `${prefillDate}T10:00`);
+      setValue("scheduledAt", `${prefillDate}T09:00`);
       setValue("status", "SCHEDULED");
     }
   }, [searchParams, setValue]);
 
-  const watchedStatus = useWatch({ control, name: "status" });
   const watchedCaption = useWatch({ control, name: "caption" }) || "";
+  const watchedStatus = useWatch({ control, name: "status" });
   const selectedPlatform = useWatch({ control, name: "platform" });
-
-  const onSubmit = async (values: FormValues) => {
-    try {
-      // Parse hashtags
-      const parsedHashtags = values.hashtags
-        ? values.hashtags
-            .split(/[\s,]+/)
-            .map((t) => t.trim().replace(/^#/, ""))
-            .filter(Boolean)
-        : [];
-
-      await api.contents.create({
-        title: values.title,
-        caption: values.caption || null,
-        hashtags: parsedHashtags,
-        platform: values.platform,
-        status: values.status,
-        scheduledAt: values.scheduledAt ? new Date(values.scheduledAt).toISOString() : null,
-        notes: values.notes || null,
-        originIdeaId: searchParams.get("originIdeaId") || null,
-      });
-
-      toast.success("Konten berhasil dibuat dan disimpan!");
-      router.push("/contents");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Gagal menyimpan konten. Periksa formulir Anda.";
-      toast.error(msg);
-    }
-  };
 
   const handleSelectTemplate = (template: ContentTemplate) => {
     setValue("title", template.title);
     setValue("caption", template.caption);
-    setValue("hashtags", template.hashtags.map((h) => `#${h}`).join(" "));
-    setValue("platform", template.defaultPlatform);
-    setValue("notes", template.notes);
+    setValue("hashtags", template.hashtags.join(" "));
+    if (template.defaultPlatform) {
+      setValue("platform", template.defaultPlatform);
+    }
+    if (template.notes) {
+      setValue("notes", template.notes);
+    }
     toast.success(`Template "${template.name}" berhasil diterapkan!`);
   };
 
+  const onSubmit = async (values: FormValues) => {
+    try {
+      const formattedHashtags = values.hashtags
+        ? values.hashtags
+            .split(/[\s,]+/)
+            .map((h) => h.replace(/^#/, "").trim())
+            .filter(Boolean)
+        : [];
+
+      let scheduledDateIso: string | undefined = undefined;
+      if (values.status === "SCHEDULED") {
+        if (!values.scheduledAt) {
+          toast.error("Wajib menentukan tanggal jadwal jika status adalah SCHEDULED");
+          return;
+        }
+        scheduledDateIso = new Date(values.scheduledAt).toISOString();
+      }
+
+      const created = await api.contents.create({
+        title: values.title,
+        caption: values.caption || null,
+        hashtags: formattedHashtags,
+        platform: values.platform,
+        status: values.status,
+        scheduledAt: scheduledDateIso || null,
+        notes: values.notes || null,
+      });
+
+      toast.success("Konten berhasil dibuat!");
+      router.push(`/contents/${created.id}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal membuat konten baru.";
+      toast.error(msg);
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-5xl animate-in fade-in-50 duration-150">
       <div className="flex items-center gap-2">
         <Link
           href="/contents"
           className={buttonVariants({
             variant: "ghost",
             size: "sm",
-            className: "-ml-2 text-muted-foreground",
+            className: "-ml-2 text-muted-foreground hover:text-foreground h-8 text-xs",
           })}
         >
-          <ArrowLeft className="size-4 mr-1" />
-          Kembali ke Daftar Konten
+          <ArrowLeft className="size-3.5 mr-1" />
+          <span>Kembali ke Daftar Konten</span>
         </Link>
       </div>
 
@@ -162,12 +176,12 @@ function NewContentForm() {
         {/* Main Editor Column (8 cols) */}
         <div className="lg:col-span-8 space-y-6">
           {/* Platform Selector Grid */}
-          <Card>
+          <Card className="border-border/80 shadow-2xs">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">
+              <CardTitle className="text-sm font-semibold text-foreground">
                 Platform Media Sosial
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 Pilih satu platform target untuk menyesuaikan format konten
               </CardDescription>
             </CardHeader>
@@ -184,21 +198,21 @@ function NewContentForm() {
                           type="button"
                           key={p}
                           onClick={() => field.onChange(p)}
-                          className={`flex items-center justify-between p-3 rounded-lg border text-left transition-all cursor-pointer ${
+                          className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
                             isSelected
-                              ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-xs"
-                              : "border-border hover:bg-muted/50"
+                              ? "border-foreground bg-accent ring-1 ring-foreground/20 shadow-2xs"
+                              : "border-border/80 bg-card hover:bg-muted/40"
                           }`}
                         >
-                          <PlatformBadge platform={p} />
+                          <PlatformBadge platform={p} size="sm" />
                           <span
                             className={`size-3.5 rounded-full border flex items-center justify-center ${
                               isSelected
-                                ? "border-primary bg-primary text-primary-foreground"
+                                ? "border-foreground bg-foreground text-background"
                                 : "border-muted-foreground/30"
                             }`}
                           >
-                            {isSelected && <span className="size-1.5 rounded-full bg-white" />}
+                            {isSelected && <span className="size-1.5 rounded-full bg-background" />}
                           </span>
                         </button>
                       );
@@ -210,37 +224,38 @@ function NewContentForm() {
           </Card>
 
           {/* Title & Caption */}
-          <Card>
+          <Card className="border-border/80 shadow-2xs">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Isi & Naskah Konten</CardTitle>
+              <CardTitle className="text-sm font-semibold text-foreground">Isi & Naskah Konten</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-4">
               {/* Title */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium" htmlFor="title">
+                  <label className="text-xs font-semibold text-foreground" htmlFor="title">
                     Judul Konten <span className="text-destructive">*</span>
                   </label>
-                  <span className="text-xs text-muted-foreground">Maks 150 karakter</span>
+                  <span className="text-[11px] text-muted-foreground">Maks 150 karakter</span>
                 </div>
                 <Input
                   id="title"
                   placeholder="Contoh: 5 Tips Efektif Menata Feed Instagram Bisnis"
+                  className="h-9 text-xs sm:text-sm"
                   {...register("title")}
                 />
                 {errors.title && (
-                  <p className="text-xs text-destructive">{errors.title.message}</p>
+                  <p className="text-[11px] font-medium text-destructive">{errors.title.message}</p>
                 )}
               </div>
 
               {/* Caption */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium" htmlFor="caption">
+                  <label className="text-xs font-semibold text-foreground" htmlFor="caption">
                     Caption Teks
                   </label>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-[11px] text-muted-foreground">
                       {watchedCaption.length} karakter
                     </span>
                     <Link
@@ -248,7 +263,7 @@ function NewContentForm() {
                       className={buttonVariants({
                         variant: "ghost",
                         size: "sm",
-                        className: "h-7 text-xs text-purple-600 dark:text-purple-400 font-medium",
+                        className: "h-7 text-xs text-indigo-600 dark:text-indigo-400 font-medium px-2",
                       })}
                     >
                       <Sparkles className="size-3.5 mr-1" />
@@ -260,36 +275,39 @@ function NewContentForm() {
                   id="caption"
                   rows={7}
                   placeholder="Tuliskan naskah caption materi Anda di sini..."
+                  className="text-xs sm:text-sm leading-relaxed"
                   {...register("caption")}
                 />
                 {errors.caption && (
-                  <p className="text-xs text-destructive">{errors.caption.message}</p>
+                  <p className="text-[11px] font-medium text-destructive">{errors.caption.message}</p>
                 )}
               </div>
 
               {/* Hashtags */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="hashtags">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground" htmlFor="hashtags">
                   Hashtag Rekomendasi
                 </label>
                 <Input
                   id="hashtags"
                   placeholder="#tipsbisnis #contentstrategy #socialmediamarketing"
+                  className="h-9 text-xs sm:text-sm"
                   {...register("hashtags")}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[11px] text-muted-foreground">
                   Pisahkan dengan spasi atau koma (tanda # otomatis ditambahkan).
                 </p>
               </div>
 
               {/* Internal Notes */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="notes">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground" htmlFor="notes">
                   Catatan Internal (Opsional)
                 </label>
                 <Input
                   id="notes"
                   placeholder="Misal: Gunakan foto produk varian cokelat, link WA di bio"
+                  className="h-9 text-xs sm:text-sm"
                   {...register("notes")}
                 />
               </div>
@@ -299,49 +317,49 @@ function NewContentForm() {
 
         {/* Sidebar Settings (4 cols) */}
         <div className="lg:col-span-4 space-y-6">
-          <Card>
+          <Card className="border-border/80 shadow-2xs">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Jadwal & Status</CardTitle>
+              <CardTitle className="text-sm font-semibold text-foreground">Jadwal & Status</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Status */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status Konten</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Status Konten</label>
                 <select
                   {...register("status")}
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="w-full h-9 rounded-lg border border-input/90 bg-card/60 px-3 py-1.5 text-xs text-foreground shadow-2xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 cursor-pointer"
                 >
-                  <option value="DRAFT">DRAFT (Disimpan sementara)</option>
-                  <option value="SCHEDULED">SCHEDULED (Jadwalkan tayang)</option>
-                  <option value="PUBLISHED">PUBLISHED (Sudah ditayangkan)</option>
+                  <option value="DRAFT" className="bg-popover text-popover-foreground">DRAFT (Disimpan sementara)</option>
+                  <option value="SCHEDULED" className="bg-popover text-popover-foreground">SCHEDULED (Jadwalkan tayang)</option>
+                  <option value="PUBLISHED" className="bg-popover text-popover-foreground">PUBLISHED (Sudah ditayangkan)</option>
                 </select>
               </div>
 
               {/* Scheduled datetime */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-1.5" htmlFor="scheduledAt">
-                  <Calendar className="size-4 text-primary" />
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5" htmlFor="scheduledAt">
+                  <Calendar className="size-3.5 text-indigo-500" />
                   Waktu Tayang Publikasi
                 </label>
                 <Input
                   id="scheduledAt"
                   type="datetime-local"
                   {...register("scheduledAt")}
-                  className="text-xs"
+                  className="text-xs h-9"
                 />
                 {watchedStatus === "SCHEDULED" && (
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
                     Konten ini akan dipetakan ke tanggal bersangkutan pada Kalender Konten.
                   </p>
                 )}
               </div>
 
               {/* Submit Buttons */}
-              <div className="pt-4 flex flex-col gap-2">
-                <Button type="submit" disabled={isSubmitting} className="w-full cursor-pointer">
+              <div className="pt-2 flex flex-col gap-2">
+                <Button type="submit" disabled={isSubmitting} className="w-full h-9 font-semibold text-xs shadow-xs">
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="size-4 animate-spin mr-2" />
+                      <Loader2 className="size-3.5 animate-spin mr-2" />
                       Menyimpan...
                     </>
                   ) : (
@@ -350,7 +368,7 @@ function NewContentForm() {
                 </Button>
                 <Link
                   href="/contents"
-                  className={buttonVariants({ variant: "outline", className: "w-full" })}
+                  className={buttonVariants({ variant: "outline", size: "sm", className: "w-full h-9 text-xs font-medium" })}
                 >
                   Batal
                 </Link>
@@ -365,7 +383,7 @@ function NewContentForm() {
 
 export default function NewContentPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm text-muted-foreground">Memuat formulir...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-xs text-muted-foreground">Memuat formulir...</div>}>
       <NewContentForm />
     </Suspense>
   );

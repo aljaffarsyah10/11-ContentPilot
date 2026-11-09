@@ -78,9 +78,9 @@ export default function AIGeneratorPage() {
       });
 
       setResults(res.captions || []);
-      toast.success(`${res.captions?.length || 0} variasi caption AI berhasil dihasilkan!`);
+      toast.success("Berhasil menghasilkan 3 variasi caption!");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Gagal menghasilkan caption AI. Silakan coba lagi.";
+      const msg = err instanceof Error ? err.message : "Gagal menghasilkan caption.";
       toast.error(msg);
     } finally {
       setIsGenerating(false);
@@ -88,33 +88,33 @@ export default function AIGeneratorPage() {
   };
 
   const handleCopy = (id: string, text: string) => {
-    if (navigator?.clipboard) {
-      navigator.clipboard.writeText(text);
-      setCopiedId(id);
-      toast.success("Caption berhasil disalin ke clipboard!");
-      setTimeout(() => setCopiedId(null), 2000);
-    }
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    toast.success("Caption berhasil disalin ke clipboard!");
+    setTimeout(() => {
+      setCopiedId(null);
+    }, 2000);
   };
 
   const handleUseAsContent = (variant: AICaptionVariant) => {
-    const params = new URLSearchParams({
-      title: topic.slice(0, 80),
-      caption: `${variant.caption}\n\n${variant.callToAction}`,
-      hashtags: variant.hashtags.map((h) => `#${h}`).join(" "),
-      platform: platform,
+    const query = new URLSearchParams({
+      title: topic.slice(0, 50),
+      caption: variant.caption,
+      hashtags: variant.hashtags.join(","),
+      platform,
     });
 
-    router.push(`/contents/new?${params.toString()}`);
+    router.push(`/contents/new?${query.toString()}`);
   };
 
   const handleSaveDraftDirectly = async (variant: AICaptionVariant) => {
     setSavingVariantId(variant.id);
     try {
       await api.contents.create({
-        title: topic.slice(0, 100),
-        caption: `${variant.caption}\n\n${variant.callToAction}`,
+        title: topic.slice(0, 60),
+        caption: variant.caption,
         hashtags: variant.hashtags,
-        platform: platform,
+        platform,
         status: "DRAFT",
       });
 
@@ -128,22 +128,22 @@ export default function AIGeneratorPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in-50 duration-150">
       <PageHeader
-        title="AI Caption Generator"
+        title="AI Caption Studio"
         description="Hasilkan copywriting caption, hook pembuka menarik, dan rekomendasi tagar relevan dalam hitungan detik."
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
         {/* Left Column: Form (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
-          <Card className="border-border shadow-xs">
+          <Card className="border-border/80 shadow-2xs">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <Sparkles className="size-4 text-purple-600" />
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                <Sparkles className="size-4 text-indigo-500" />
                 Parameter Generasi AI
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 Sesuaikan instruksi agar hasil copywriting sesuai dengan target audiens Anda
               </CardDescription>
             </CardHeader>
@@ -178,10 +178,10 @@ export default function AIGeneratorPage() {
                   <select
                     value={platform}
                     onChange={(e) => setPlatform(e.target.value as SocialPlatform)}
-                    className="w-full h-8 rounded-md border border-input bg-background px-2.5 py-1 text-xs shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="w-full h-9 rounded-lg border border-input/90 bg-card/60 px-3 py-1.5 text-xs text-foreground font-medium shadow-2xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 cursor-pointer"
                   >
                     {platformOptions.map((p) => (
-                      <option key={p} value={p}>
+                      <option key={p} value={p} className="bg-popover text-popover-foreground">
                         {p}
                       </option>
                     ))}
@@ -201,10 +201,10 @@ export default function AIGeneratorPage() {
                           key={t.value}
                           type="button"
                           onClick={() => setTone(t.value)}
-                          className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors border cursor-pointer ${
+                          className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150 border cursor-pointer ${
                             isSelected
-                              ? "bg-primary text-primary-foreground border-primary shadow-xs"
-                              : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"
+                              ? "bg-foreground text-background border-foreground font-semibold shadow-2xs"
+                              : "bg-muted/40 text-muted-foreground border-border/80 hover:bg-accent hover:text-foreground"
                           }`}
                         >
                           {t.label}
@@ -223,11 +223,11 @@ export default function AIGeneratorPage() {
                     <select
                       value={length}
                       onChange={(e) => setLength(e.target.value as CaptionLength)}
-                      className="w-full h-8 rounded-md border border-input bg-background px-2.5 py-1 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      className="w-full h-9 rounded-lg border border-input/90 bg-card/60 px-2.5 py-1.5 text-xs text-foreground shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 cursor-pointer"
                     >
-                      <option value="short">Pendek (&lt; 50 kata)</option>
-                      <option value="medium">Sedang (50-150 kata)</option>
-                      <option value="long">Panjang (&gt; 150 kata)</option>
+                      <option value="short" className="bg-popover text-popover-foreground">Pendek (&lt; 50 kata)</option>
+                      <option value="medium" className="bg-popover text-popover-foreground">Sedang (50-150 kata)</option>
+                      <option value="long" className="bg-popover text-popover-foreground">Panjang (&gt; 150 kata)</option>
                     </select>
                   </div>
                   <div className="space-y-1.5">
@@ -237,10 +237,10 @@ export default function AIGeneratorPage() {
                     <select
                       value={language}
                       onChange={(e) => setLanguage(e.target.value as "indonesian" | "english")}
-                      className="w-full h-8 rounded-md border border-input bg-background px-2.5 py-1 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      className="w-full h-9 rounded-lg border border-input/90 bg-card/60 px-2.5 py-1.5 text-xs text-foreground shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 cursor-pointer"
                     >
-                      <option value="indonesian">Bahasa Indonesia</option>
-                      <option value="english">English</option>
+                      <option value="indonesian" className="bg-popover text-popover-foreground">Bahasa Indonesia</option>
+                      <option value="english" className="bg-popover text-popover-foreground">English</option>
                     </select>
                   </div>
                 </div>
@@ -255,7 +255,7 @@ export default function AIGeneratorPage() {
                     placeholder="Contoh: Mahasiswa, Ibu Rumah Tangga, Pekerja Kantoran"
                     value={audience}
                     onChange={(e) => setAudience(e.target.value)}
-                    className="text-xs h-8"
+                    className="text-xs h-9"
                   />
                 </div>
 
@@ -269,7 +269,7 @@ export default function AIGeneratorPage() {
                     placeholder="Contoh: Sertakan ajakan untuk follow akun"
                     value={additionalInstructions}
                     onChange={(e) => setAdditionalInstructions(e.target.value)}
-                    className="text-xs h-8"
+                    className="text-xs h-9"
                   />
                 </div>
 
@@ -277,16 +277,16 @@ export default function AIGeneratorPage() {
                 <Button
                   type="submit"
                   disabled={isGenerating || !topic.trim()}
-                  className="w-full h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-medium mt-2 cursor-pointer"
+                  className="w-full h-9 font-semibold text-xs shadow-xs mt-2"
                 >
                   {isGenerating ? (
                     <>
-                      <Loader2 className="size-4 animate-spin mr-2" />
+                      <Loader2 className="size-3.5 animate-spin mr-2" />
                       Sedang Menghasilkan...
                     </>
                   ) : (
                     <>
-                      <Sparkles className="size-4 mr-2" />
+                      <Sparkles className="size-3.5 mr-2" />
                       Generate 3 Variasi Caption
                     </>
                   )}
@@ -299,18 +299,18 @@ export default function AIGeneratorPage() {
         {/* Right Column: Output Variations (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
           {results.length === 0 ? (
-            <Card className="border-dashed border-2 border-border/80 bg-card/60 p-12 text-center">
+            <Card className="border-dashed border border-border/80 bg-card/40 p-12 text-center shadow-2xs">
               <div className="flex flex-col items-center justify-center">
-                <div className="size-14 rounded-full bg-purple-50 dark:bg-purple-950/40 text-purple-600 flex items-center justify-center mb-4">
-                  <Sparkles className="size-7" />
+                <div className="size-12 rounded-xl bg-accent text-foreground flex items-center justify-center mb-4 border border-border/60 shadow-2xs">
+                  <Sparkles className="size-5 text-indigo-500" />
                 </div>
-                <h3 className="text-base font-semibold text-foreground mb-1">
+                <h3 className="text-sm font-semibold text-foreground mb-1">
                   Variasi Caption Belum Dibuat
                 </h3>
-                <p className="text-sm text-muted-foreground max-w-sm">
+                <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
                   Isi topik dan preferensi copywriting di sebelah kiri, lalu klik tombol &quot;Generate&quot; untuk melihat hasilnya.
                 </p>
-                <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="mt-6 flex items-center gap-1.5 text-xs text-muted-foreground/80">
                   <HelpCircle className="size-3.5" />
                   <span>Tips: Semakin spesifik topik Anda, semakin tajam hook yang dihasilkan.</span>
                 </div>
@@ -320,17 +320,17 @@ export default function AIGeneratorPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-foreground">
+                  <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">
                     Hasil Generasi ({results.length} Variasi)
                   </h3>
-                  <PlatformBadge platform={platform} />
+                  <PlatformBadge platform={platform} size="sm" />
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleGenerate()}
                   disabled={isGenerating}
-                  className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                  className="text-xs text-muted-foreground hover:text-foreground h-7 px-2"
                 >
                   <RotateCw className="size-3.5 mr-1" />
                   Regenerate
@@ -338,16 +338,16 @@ export default function AIGeneratorPage() {
               </div>
 
               {results.map((variant, index) => (
-                <Card key={variant.id} className="border-border bg-card shadow-xs">
-                  <CardHeader className="py-3 px-4 bg-muted/20 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                <Card key={variant.id} className="border-border/80 bg-card shadow-2xs">
+                  <CardHeader className="py-2.5 px-4 bg-muted/20 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                       Variasi #{index + 1}
                     </span>
                     <div className="flex items-center gap-1.5">
                       <Button
-                        size="sm"
+                        size="xs"
                         variant="ghost"
-                        className="h-7 text-xs cursor-pointer"
+                        className="h-7 text-xs font-normal"
                         onClick={() =>
                           handleCopy(
                             variant.id,
@@ -370,9 +370,9 @@ export default function AIGeneratorPage() {
                         )}
                       </Button>
                       <Button
-                        size="sm"
+                        size="xs"
                         variant="outline"
-                        className="h-7 text-xs cursor-pointer"
+                        className="h-7 text-xs font-normal"
                         disabled={savingVariantId === variant.id}
                         onClick={() => handleSaveDraftDirectly(variant)}
                       >
@@ -384,9 +384,9 @@ export default function AIGeneratorPage() {
                         Simpan Draft
                       </Button>
                       <Button
-                        size="sm"
+                        size="xs"
                         variant="default"
-                        className="h-7 text-xs cursor-pointer"
+                        className="h-7 text-xs font-medium shadow-2xs"
                         onClick={() => handleUseAsContent(variant)}
                       >
                         <Plus className="size-3 mr-1" />
@@ -395,24 +395,29 @@ export default function AIGeneratorPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 space-y-3">
-                    <p className="text-sm text-foreground leading-relaxed whitespace-pre-line font-sans">
+                    <p className="text-xs sm:text-sm text-foreground leading-relaxed whitespace-pre-line font-sans">
                       {variant.caption}
                     </p>
 
-                    <div className="p-2.5 rounded-md bg-muted/40 border border-border/60 text-xs font-medium text-primary/90">
-                      💡 {variant.callToAction}
-                    </div>
+                    {variant.callToAction && (
+                      <div className="rounded-lg border border-border/60 bg-muted/30 p-2.5 text-xs text-foreground/90">
+                        <span className="font-semibold text-foreground mr-1.5">Call to Action:</span>
+                        {variant.callToAction}
+                      </div>
+                    )}
 
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {variant.hashtags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
+                    {variant.hashtags && variant.hashtags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {variant.hashtags.map((h, i) => (
+                          <span
+                            key={i}
+                            className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-medium text-muted-foreground border border-border/60"
+                          >
+                            #{h.replace(/^#/, "")}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
