@@ -11,7 +11,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-(--card-spacing) rounded-xl border border-border/80 bg-card text-card-foreground shadow-[0_1px_3px_0_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-150 [--card-spacing:--spacing(5)] data-[size=sm]:[--card-spacing:--spacing(4)]",
+        "group/card relative flex flex-col gap-(--card-spacing) rounded-xl border border-border/70 bg-gradient-to-b from-card via-card to-card/95 text-card-foreground shadow-[0_1px_3px_0_rgba(15,23,42,0.03),0_1px_2px_-1px_rgba(15,23,42,0.02)] transition-all duration-200 hover:border-border/90 hover:shadow-[0_4px_16px_-4px_rgba(15,23,42,0.06)] dark:from-card dark:via-card/95 dark:to-card/90 dark:shadow-none dark:hover:border-border dark:hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4)] [--card-spacing:--spacing(5)] data-[size=sm]:[--card-spacing:--spacing(4)]",
         className
       )}
       {...props}
@@ -80,7 +80,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center px-(--card-spacing) pb-(--card-spacing) pt-2 border-t border-border/40 text-xs text-muted-foreground",
+        "flex items-center px-(--card-spacing) pb-(--card-spacing) pt-2.5 border-t border-border/40 text-xs text-muted-foreground",
         className
       )}
       {...props}

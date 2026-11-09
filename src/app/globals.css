@@ -8,7 +8,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-mono);
   --font-heading: var(--font-sans);
 
   --color-sidebar-ring: var(--sidebar-ring);
@@ -53,17 +53,17 @@
 }
 
 :root {
-  /* Slate/Midnight Modern Palette - Light Mode */
+  /* Ultra-Clean Modern Palette - Light Mode */
   --background: #F8FAFC;
-  --foreground: #0F172A;
+  --foreground: #090E17;
   
   --card: #FFFFFF;
-  --card-foreground: #0F172A;
+  --card-foreground: #090E17;
   
   --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
+  --popover-foreground: #090E17;
   
-  /* Primary: Deep Midnight Slate */
+  /* Primary: Deep Obsidian Indigo */
   --primary: #0F172A;
   --primary-foreground: #FFFFFF;
   
@@ -71,10 +71,10 @@
   --secondary-foreground: #1E293B;
   
   --muted: #F1F5F9;
-  --muted-foreground: #64748B;
+  --muted-foreground: #475569;
   
   --accent: #F1F5F9;
-  --accent-foreground: #0F172A;
+  --accent-foreground: #090E17;
   
   --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
@@ -89,7 +89,7 @@
   --chart-4: #F59E0B;
   --chart-5: #6366F1;
   
-  --radius: 0.5rem;
+  --radius: 0.625rem;
   
   /* Sidebar */
   --sidebar: #FFFFFF;
@@ -97,14 +97,14 @@
   --sidebar-primary: #0F172A;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #F8FAFC;
-  --sidebar-accent-foreground: #0F172A;
+  --sidebar-accent-foreground: #090E17;
   --sidebar-border: #E2E8F0;
   --sidebar-ring: #4F46E5;
 }
 
 .dark {
   /* Linear/Raycast Dark Theme - Sophisticated Dark Slate */
-  --background: #090D16;
+  --background: #0B0F19;
   --foreground: #F8FAFC;
   
   --card: #111827;
@@ -113,9 +113,9 @@
   --popover: #111827;
   --popover-foreground: #F8FAFC;
   
-  /* Primary: Clean White/Light Slate in Dark Mode */
+  /* Primary: Clean Bright Slate */
   --primary: #F8FAFC;
-  --primary-foreground: #090D16;
+  --primary-foreground: #0B0F19;
   
   --secondary: #1F2937;
   --secondary-foreground: #F3F4F6;
@@ -127,7 +127,7 @@
   --accent-foreground: #F8FAFC;
   
   --destructive: #F87171;
-  --destructive-foreground: #090D16;
+  --destructive-foreground: #0B0F19;
   
   --border: #1F2937;
   --input: #1F2937;
@@ -140,7 +140,7 @@
   --chart-5: #818CF8;
   
   /* Sidebar Dark */
-  --sidebar: #0D131F;
+  --sidebar: #0D1322;
   --sidebar-foreground: #E2E8F0;
   --sidebar-primary: #6366F1;
   --sidebar-primary-foreground: #FFFFFF;
@@ -155,11 +155,16 @@
     @apply border-border outline-ring/40;
   }
   body {
-    @apply bg-background text-foreground tracking-[-0.01em];
+    @apply bg-background text-foreground font-sans antialiased text-[14.5px] leading-relaxed;
+    letter-spacing: -0.015em;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
   html {
     @apply font-sans scroll-smooth;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.025em;
   }
   
   /* Refined scrollbars */

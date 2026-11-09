@@ -60,11 +60,14 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="border-border/80 bg-card shadow-[0_4px_20px_0_rgba(0,0,0,0.04)] dark:shadow-none">
-      <CardHeader className="space-y-1.5 text-center pb-2">
+    <Card className="relative overflow-hidden border-border/80 bg-gradient-to-b from-card via-card to-card/95 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-none">
+      {/* Top subtle decorative accent gradient */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-violet-500" />
+
+      <CardHeader className="space-y-1.5 text-center pb-2 pt-6">
         <div className="flex justify-center mb-2">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-foreground text-background shadow-xs">
-            <Sparkles className="size-4.5" />
+          <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md">
+            <Sparkles className="size-5" />
           </div>
         </div>
         <CardTitle className="text-xl font-bold tracking-tight text-foreground">
@@ -111,10 +114,11 @@ export default function LoginPage() {
             )}
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-3 pt-2">
+        <CardFooter className="flex flex-col space-y-3 pt-2 pb-6">
           <Button
             type="submit"
-            className="w-full h-9 font-semibold text-xs shadow-xs"
+            variant="gradient"
+            className="w-full h-9 font-semibold text-xs shadow-md"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -133,7 +137,7 @@ export default function LoginPage() {
             Belum memiliki akun?{" "}
             <Link
               href="/register"
-              className="font-semibold text-foreground underline underline-offset-4 hover:text-foreground/80 transition-colors"
+              className="font-semibold text-foreground underline underline-offset-4 hover:text-indigo-600 transition-colors"
             >
               Daftar sekarang
             </Link>

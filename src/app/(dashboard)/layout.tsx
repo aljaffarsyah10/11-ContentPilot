@@ -10,7 +10,11 @@ export default function DashboardLayout({
 }>) {
   return (
     <AuthGuard>
-      <div className="flex min-h-screen bg-muted/20">
+      <div className="relative flex min-h-screen bg-background">
+        {/* Subtle ambient background glow */}
+        <div className="fixed top-0 right-1/4 size-[500px] bg-indigo-500/[0.03] dark:bg-indigo-500/[0.05] rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="fixed bottom-0 left-1/3 size-[400px] bg-violet-500/[0.02] dark:bg-violet-500/[0.04] rounded-full blur-3xl pointer-events-none -z-10" />
+
         {/* Desktop Sidebar (Fixed) */}
         <div className="hidden lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-64 lg:flex-col">
           <Suspense fallback={<div className="h-full w-64 border-r border-border bg-card" />}>

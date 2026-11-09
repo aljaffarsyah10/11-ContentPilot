@@ -29,6 +29,7 @@ import {
   AlertCircle,
   RefreshCw,
   Loader2,
+  Zap,
 } from "lucide-react";
 
 interface DashboardData {
@@ -148,7 +149,7 @@ function DashboardView() {
 
   return (
     <div className="space-y-8 animate-in fade-in-50 duration-200">
-      {/* Header */}
+      {/* Header with subtle gradient title */}
       <PageHeader
         title="Dashboard"
         description="Ringkasan perencanaan konten sosial media dan inspirasi ide aktif Anda."
@@ -157,7 +158,7 @@ function DashboardView() {
           href="/contents/new"
           className={buttonVariants({
             size: "sm",
-            className: "shadow-xs font-medium h-9 gap-1.5",
+            className: "shadow-xs font-semibold h-9 gap-1.5",
           })}
         >
           <Plus className="size-4" />
@@ -166,51 +167,58 @@ function DashboardView() {
         <Link
           href="/ai-generator"
           className={buttonVariants({
-            variant: "outline",
+            variant: "gradient",
             size: "sm",
-            className: "shadow-2xs font-medium h-9 gap-1.5",
+            className: "font-semibold h-9 gap-1.5",
           })}
         >
-          <Sparkles className="size-4 text-indigo-500" />
-          <span>AI Generator</span>
+          <Sparkles className="size-4" />
+          <span>AI Caption Studio</span>
         </Link>
       </PageHeader>
 
-      {/* KPI Stats Grid */}
+      {/* KPI Stats Grid with Sophisticated Gradients */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Konten"
           value={metrics.totalContents}
           icon={FileText}
-          description="Seluruh konten terdaftar"
+          description="Seluruh materi terdaftar"
+          gradient="indigo"
         />
         <StatCard
           title="Terjadwal"
           value={metrics.scheduledCount}
           icon={CalendarIcon}
           description="Siap tayang di kalender"
+          gradient="blue"
         />
         <StatCard
           title="Draft Konten"
           value={metrics.draftCount}
           icon={Clock}
           description="Perlu disempurnakan"
+          gradient="amber"
         />
         <StatCard
-          title="Ide Tersimpan"
+          title="Ide Backlog"
           value={metrics.activeIdeasCount}
           icon={Lightbulb}
-          description="Inspirasi dalam backlog"
+          description="Inspirasi siap diolah"
+          gradient="purple"
         />
       </div>
 
       {/* Main Sections Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Section 1: Upcoming Scheduled Content */}
-        <Card className="flex flex-col border-border/80 shadow-[0_1px_3px_0_rgba(0,0,0,0.03)]">
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <Card className="flex flex-col border-border/80 shadow-[0_1px_3px_0_rgba(15,23,42,0.03)] bg-gradient-to-b from-card via-card to-card/95">
+          <CardHeader className="flex flex-row items-center justify-between pb-3.5 border-b border-border/40">
             <div>
-              <CardTitle className="text-base font-semibold">Konten Akan Tayang</CardTitle>
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <CalendarIcon className="size-4 text-indigo-500" />
+                <span>Konten Akan Tayang</span>
+              </CardTitle>
               <CardDescription className="text-xs">
                 Jadwal posting terdekat yang telah direncanakan
               </CardDescription>
@@ -227,12 +235,12 @@ function DashboardView() {
               <ArrowRight className="size-3.5" />
             </Link>
           </CardHeader>
-          <CardContent className="flex-1 pt-2 pb-4">
+          <CardContent className="flex-1 pt-3 pb-4">
             {upcoming.length === 0 ? (
               <EmptyState
                 icon={CalendarIcon}
                 title="Belum Ada Jadwal Konten"
-                description="Rencanakan dan atur tanggal posting konten Anda melalui kalender."
+                description="Rencanakan dan atur tanggal posting konten Anda melalui kalender interaktif."
                 actionLabel="Jadwalkan Konten"
                 onAction={() => router.push("/contents/new")}
               />
@@ -248,19 +256,19 @@ function DashboardView() {
                   return (
                     <div
                       key={item.id}
-                      className="py-3.5 first:pt-0 last:pb-0 flex items-start justify-between gap-4 group transition-colors"
+                      className="py-3.5 first:pt-1 last:pb-1 flex items-start justify-between gap-4 group transition-colors hover:bg-muted/30 px-2 rounded-lg -mx-2"
                     >
                       <div className="space-y-1.5 min-w-0 flex-1">
                         <Link
                           href={`/contents/${item.id}`}
-                          className="font-medium text-sm text-foreground hover:underline line-clamp-1 block"
+                          className="font-medium text-sm text-foreground hover:text-indigo-600 dark:hover:text-indigo-400 line-clamp-1 block transition-colors"
                         >
                           {item.title}
                         </Link>
                         <div className="flex flex-wrap items-center gap-2">
                           <PlatformBadge platform={item.platform} size="sm" />
                           <StatusBadge status={item.status} size="sm" />
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <span className="text-[11px] text-muted-foreground flex items-center gap-1">
                             <Clock className="size-3" />
                             {scheduledDate}
                           </span>
@@ -285,10 +293,13 @@ function DashboardView() {
         </Card>
 
         {/* Section 2: Recent Content Ideas */}
-        <Card className="flex flex-col border-border/80 shadow-[0_1px_3px_0_rgba(0,0,0,0.03)]">
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <Card className="flex flex-col border-border/80 shadow-[0_1px_3px_0_rgba(15,23,42,0.03)] bg-gradient-to-b from-card via-card to-card/95">
+          <CardHeader className="flex flex-row items-center justify-between pb-3.5 border-b border-border/40">
             <div>
-              <CardTitle className="text-base font-semibold">Ide Konten Terbaru</CardTitle>
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Lightbulb className="size-4 text-amber-500" />
+                <span>Ide Konten Terbaru</span>
+              </CardTitle>
               <CardDescription className="text-xs">
                 Inspirasi yang siap dikonversi menjadi materi tayang
               </CardDescription>
@@ -305,7 +316,7 @@ function DashboardView() {
               <ArrowRight className="size-3.5" />
             </Link>
           </CardHeader>
-          <CardContent className="flex-1 pt-2 pb-4">
+          <CardContent className="flex-1 pt-3 pb-4">
             {recentIdeas.length === 0 ? (
               <EmptyState
                 icon={Lightbulb}
@@ -324,7 +335,7 @@ function DashboardView() {
                   return (
                     <div
                       key={idea.id}
-                      className="py-3.5 first:pt-0 last:pb-0 flex items-start justify-between gap-4 group"
+                      className="py-3.5 first:pt-1 last:pb-1 flex items-start justify-between gap-4 group transition-colors hover:bg-muted/30 px-2 rounded-lg -mx-2"
                     >
                       <div className="space-y-1.5 min-w-0 flex-1">
                         <p className="font-medium text-sm text-foreground line-clamp-1">
@@ -364,28 +375,39 @@ function DashboardView() {
         </Card>
       </div>
 
-      {/* Quick Launch Banner */}
-      <div className="rounded-xl border border-border/80 bg-gradient-to-r from-card via-card to-accent/40 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
-        <div className="space-y-1 text-center sm:text-left">
-          <h4 className="text-base font-semibold text-foreground flex items-center justify-center sm:justify-start gap-2">
-            <Sparkles className="size-4 text-indigo-500" />
-            Butuh ide caption segar hari ini?
-          </h4>
-          <p className="text-xs text-muted-foreground max-w-xl">
-            Gunakan AI Caption Studio untuk membuat copywriting promosi, edukasi, atau storytelling
-            dalam hitungan detik.
-          </p>
+      {/* Premium Glow Gradient Banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-indigo-500/20 bg-gradient-to-r from-indigo-950/40 via-purple-950/20 to-slate-900/60 p-6 sm:p-8 shadow-[0_8px_30px_rgb(79,70,229,0.08)] backdrop-blur-sm">
+        {/* Background gradient decorative orb */}
+        <div className="absolute -right-12 -top-12 size-48 bg-gradient-to-bl from-indigo-500/30 to-purple-500/0 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute -left-12 -bottom-12 size-48 bg-gradient-to-tr from-violet-500/20 to-transparent rounded-full blur-2xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-5 text-center sm:text-left">
+          <div className="space-y-1.5 max-w-xl">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-indigo-400/30 bg-indigo-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-400">
+              <Zap className="size-3" />
+              <span>AI Copywriting Accelerator</span>
+            </div>
+            <h4 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
+              Butuh ide caption segar & rekomendasi tagar hari ini?
+            </h4>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              Gunakan AI Caption Studio untuk membuat copywriting promosi, edukasi, atau storytelling
+              dalam hitungan detik berdasarkan audiens target Anda.
+            </p>
+          </div>
+
+          <Link
+            href="/ai-generator"
+            className={buttonVariants({
+              variant: "gradient",
+              size: "sm",
+              className: "h-10 px-5 text-xs font-semibold shrink-0 shadow-md gap-2",
+            })}
+          >
+            <span>Buka AI Caption Studio</span>
+            <ArrowRight className="size-3.5" />
+          </Link>
         </div>
-        <Link
-          href="/ai-generator"
-          className={buttonVariants({
-            size: "sm",
-            className: "h-9 px-4 text-xs font-semibold shrink-0 shadow-xs",
-          })}
-        >
-          Coba Generator AI
-          <ArrowRight className="size-3.5 ml-1.5" />
-        </Link>
       </div>
     </div>
   );

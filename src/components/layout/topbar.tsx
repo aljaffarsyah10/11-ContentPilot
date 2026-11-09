@@ -57,8 +57,8 @@ export function Topbar() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-border/80 bg-background/80 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 sm:px-6">
-      {/* Left: Mobile Toggle & Page Title */}
+    <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-border/70 bg-background/80 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 sm:px-6">
+      {/* Left: Mobile Toggle & Page Title with subtle accent indicator */}
       <div className="flex items-center gap-3">
         {/* Mobile Nav Sheet */}
         <Sheet open={openMobile} onOpenChange={setOpenMobile}>
@@ -78,8 +78,9 @@ export function Topbar() {
           </SheetContent>
         </Sheet>
 
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-foreground tracking-tight sm:text-base">
+        <div className="flex items-center gap-2.5">
+          <div className="size-2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 hidden sm:block shadow-2xs" />
+          <h2 className="text-sm font-bold text-foreground tracking-tight sm:text-base">
             {currentTitle}
           </h2>
         </div>
@@ -92,23 +93,23 @@ export function Topbar() {
           href="/contents/new"
           className={buttonVariants({
             size: "sm",
-            className: "hidden sm:inline-flex shadow-xs font-medium h-8",
+            className: "hidden sm:inline-flex shadow-xs font-semibold h-8 text-xs",
           })}
         >
           <Plus className="size-3.5 mr-1.5" />
           <span>Buat Konten</span>
         </Link>
 
-        {/* Quick Action: AI Generator */}
+        {/* Quick Action: AI Generator with gradient */}
         <Link
           href="/ai-generator"
           className={buttonVariants({
-            variant: "outline",
+            variant: "gradient",
             size: "sm",
-            className: "hidden md:inline-flex h-8 shadow-2xs",
+            className: "hidden md:inline-flex h-8 text-xs font-semibold shadow-2xs",
           })}
         >
-          <Sparkles className="size-3.5 mr-1.5 text-indigo-500" />
+          <Sparkles className="size-3.5 mr-1.5" />
           <span>AI Caption</span>
         </Link>
 
@@ -121,16 +122,16 @@ export function Topbar() {
             className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             aria-label="Menu Pengguna"
           >
-            <Avatar className="size-8 border border-border/80">
-              <AvatarFallback className="text-xs font-semibold bg-accent text-foreground">
+            <Avatar className="size-8 border border-border/80 shadow-2xs">
+              <AvatarFallback className="text-xs font-bold bg-gradient-to-br from-accent to-muted text-foreground">
                 {userInitials}
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 mt-1 shadow-md border-border/80">
+          <DropdownMenuContent align="end" className="w-56 mt-1 shadow-lg border-border/80 bg-gradient-to-b from-popover to-popover/95">
             <DropdownMenuLabel className="font-normal p-3">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-semibold leading-none text-foreground">{userName}</p>
+                <p className="text-sm font-bold leading-none text-foreground">{userName}</p>
                 <p className="text-xs leading-none text-muted-foreground truncate">{userEmail}</p>
               </div>
             </DropdownMenuLabel>

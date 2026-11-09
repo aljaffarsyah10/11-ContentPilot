@@ -12,6 +12,7 @@ import {
   Share2,
   Layers,
   ShieldCheck,
+  Zap,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -45,20 +46,20 @@ export const metadata: Metadata = {
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-col items-center overflow-hidden">
+    <div className="relative flex flex-col items-center overflow-hidden">
+      {/* Background radial gradient mesh */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/15 via-purple-500/5 to-transparent pointer-events-none -z-10" />
+
       {/* Hero Section */}
       <section className="relative w-full py-20 md:py-28 lg:py-36 flex flex-col items-center text-center px-4 sm:px-6 max-w-5xl mx-auto">
-        {/* Subtle decorative glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 size-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
-
-        <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-3.5 py-1 text-xs font-medium text-foreground mb-6 shadow-2xs backdrop-blur-xs">
+        <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/5 px-4 py-1.5 text-xs font-semibold text-foreground mb-6 shadow-2xs backdrop-blur-md">
           <Sparkles className="size-3.5 text-indigo-500" />
           <span>SaaS Perencanaan Konten Media Sosial Modern</span>
         </div>
 
         <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl max-w-4xl leading-[1.1]">
           Rencanakan Konten & Hasilkan Caption{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-foreground via-foreground/90 to-indigo-600 dark:to-indigo-400">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 dark:from-indigo-400 dark:via-violet-400 dark:to-purple-400">
             Jauh Lebih Cepat.
           </span>
         </h1>
@@ -70,7 +71,11 @@ export default function LandingPage() {
         <div className="mt-8 flex flex-col sm:flex-row gap-3 w-full sm:w-auto justify-center">
           <Link
             href="/register"
-            className={buttonVariants({ size: "lg", className: "h-11 px-6 text-sm font-semibold shadow-xs" })}
+            className={buttonVariants({
+              variant: "gradient",
+              size: "lg",
+              className: "h-11 px-7 text-sm font-semibold shadow-md",
+            })}
           >
             Mulai Gratis Sekarang
             <ArrowRight className="size-4 ml-2" />
@@ -80,24 +85,24 @@ export default function LandingPage() {
             className={buttonVariants({
               variant: "outline",
               size: "lg",
-              className: "h-11 px-6 text-sm font-semibold shadow-2xs",
+              className: "h-11 px-7 text-sm font-semibold shadow-2xs",
             })}
           >
             Buka Demo Dashboard
           </Link>
         </div>
 
-        {/* Value Highlights */}
+        {/* Value Highlights with subtle badges */}
         <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-xs sm:text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-card/60 border border-border/60 px-3 py-1 rounded-full shadow-2xs">
             <CheckCircle2 className="size-4 text-emerald-500" />
             <span>Tanpa Biaya Tersembunyi</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-card/60 border border-border/60 px-3 py-1 rounded-full shadow-2xs">
             <CheckCircle2 className="size-4 text-emerald-500" />
             <span>Mendukung 6 Platform Utama</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-card/60 border border-border/60 px-3 py-1 rounded-full shadow-2xs">
             <CheckCircle2 className="size-4 text-emerald-500" />
             <span>AI Copywriting Multi-Bahasa</span>
           </div>
@@ -105,11 +110,15 @@ export default function LandingPage() {
       </section>
 
       {/* Feature Showcase Grid */}
-      <section className="w-full py-16 md:py-24 border-t border-border/60 bg-card/40">
+      <section className="w-full py-16 md:py-24 border-t border-border/60 bg-gradient-to-b from-card/30 via-background to-card/40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">
+              <Zap className="size-3.5" />
+              <span>Fitur Utama</span>
+            </div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-              Fitur Dirancang Khusus untuk Kreator & Tim
+              Dirancang Khusus untuk Kreator, UMKM & Tim
             </h2>
             <p className="text-sm text-muted-foreground">
               Semua perlengkapan kerja yang Anda butuhkan untuk menjaga konsistensi publikasi setiap hari.
@@ -117,36 +126,39 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="border-border/80 bg-card hover:border-border transition-all">
+            <Card className="relative overflow-hidden border-border/80 bg-gradient-to-b from-card via-card to-card/90 hover:border-indigo-500/40 transition-all duration-300 group">
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-500/40 via-amber-500/20 to-transparent" />
               <CardContent className="p-6 space-y-3">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-accent text-foreground border border-border/60 shadow-2xs">
+                <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-2xs group-hover:scale-105 transition-transform">
                   <Lightbulb className="size-5" />
                 </div>
-                <h3 className="text-base font-semibold text-foreground">Backlog Ide Terpusat</h3>
+                <h3 className="text-base font-bold text-foreground">Backlog Ide Terpusat</h3>
                 <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                   Catat inspirasi konten secara spontan. Pilah status dari Baru, Dikerjakan, hingga Siap Tayang tanpa takut ide hilang.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-border/80 bg-card hover:border-border transition-all">
+            <Card className="relative overflow-hidden border-border/80 bg-gradient-to-b from-card via-card to-card/90 hover:border-indigo-500/40 transition-all duration-300 group shadow-sm">
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-violet-500" />
               <CardContent className="p-6 space-y-3">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-accent text-indigo-500 border border-border/60 shadow-2xs">
+                <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-violet-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 shadow-2xs group-hover:scale-105 transition-transform">
                   <Sparkles className="size-5" />
                 </div>
-                <h3 className="text-base font-semibold text-foreground">AI Caption & Hashtag Studio</h3>
+                <h3 className="text-base font-bold text-foreground">AI Caption & Hashtag Studio</h3>
                 <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                   Hasilkan variasi caption, hashtag terarah, dan kalimat Call-to-Action (CTA) berdasarkan platform dan tone of voice yang Anda pilih.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-border/80 bg-card hover:border-border transition-all">
+            <Card className="relative overflow-hidden border-border/80 bg-gradient-to-b from-card via-card to-card/90 hover:border-indigo-500/40 transition-all duration-300 group">
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500/40 via-blue-500/20 to-transparent" />
               <CardContent className="p-6 space-y-3">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-accent text-foreground border border-border/60 shadow-2xs">
+                <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600 dark:text-blue-400 border border-blue-500/30 shadow-2xs group-hover:scale-105 transition-transform">
                   <Calendar className="size-5" />
                 </div>
-                <h3 className="text-base font-semibold text-foreground">Kalender Konten Interaktif</h3>
+                <h3 className="text-base font-bold text-foreground">Kalender Konten Interaktif</h3>
                 <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                   Lihat visual rencana posting bulanan dan mingguan. Pantau kesiapan materi tayang per platform dengan indikator status jelas.
                 </p>
@@ -154,26 +166,32 @@ export default function LandingPage() {
             </Card>
           </div>
 
-          {/* Secondary Features row */}
+          {/* Secondary Features row with subtle gradients */}
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="flex items-center gap-3 p-4 rounded-xl border border-border/60 bg-card/50">
-              <Layers className="size-5 text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-3 p-4 rounded-xl border border-border/70 bg-gradient-to-br from-card to-accent/30 shadow-2xs">
+              <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500">
+                <Layers className="size-4 shrink-0" />
+              </div>
               <div className="text-xs">
-                <p className="font-semibold text-foreground">Template Post Siap Pakai</p>
+                <p className="font-bold text-foreground">Template Post Siap Pakai</p>
                 <p className="text-muted-foreground">Struktur posting edukasi, promo & tips</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-4 rounded-xl border border-border/60 bg-card/50">
-              <Share2 className="size-5 text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-3 p-4 rounded-xl border border-border/70 bg-gradient-to-br from-card to-accent/30 shadow-2xs">
+              <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+                <Share2 className="size-4 shrink-0" />
+              </div>
               <div className="text-xs">
-                <p className="font-semibold text-foreground">Duplikasi Sekali Klik</p>
+                <p className="font-bold text-foreground">Duplikasi Sekali Klik</p>
                 <p className="text-muted-foreground">Repurpose konten sukses dengan mudah</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-4 rounded-xl border border-border/60 bg-card/50">
-              <ShieldCheck className="size-5 text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-3 p-4 rounded-xl border border-border/70 bg-gradient-to-br from-card to-accent/30 shadow-2xs">
+              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
+                <ShieldCheck className="size-4 shrink-0" />
+              </div>
               <div className="text-xs">
-                <p className="font-semibold text-foreground">Ekspor CSV Standard</p>
+                <p className="font-bold text-foreground">Ekspor CSV Standard</p>
                 <p className="text-muted-foreground">Kompatibel penuh dengan Microsoft Excel</p>
               </div>
             </div>
@@ -181,26 +199,29 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Footer Section */}
+      {/* CTA Section with Glowing Gradient Box */}
       <section className="w-full py-20 px-4 sm:px-6 flex flex-col items-center text-center">
-        <div className="max-w-3xl mx-auto space-y-4">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            Mulai Kelola Konten Anda Lebih Konsisten
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Bergabunglah dengan ratusan kreator dan pemilik bisnis yang menghemat waktu perencanaan konten setiap minggunya.
-          </p>
-          <div className="pt-2">
-            <Link
-              href="/register"
-              className={buttonVariants({
-                size: "lg",
-                className: "h-11 px-8 text-sm font-semibold shadow-xs",
-              })}
-            >
-              Daftar Sekarang — Gratis
-              <ArrowRight className="size-4 ml-2" />
-            </Link>
+        <div className="relative overflow-hidden rounded-3xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/50 via-slate-900/70 to-purple-950/50 p-8 sm:p-12 max-w-4xl mx-auto shadow-2xl backdrop-blur-md">
+          <div className="relative z-10 space-y-4">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+              Mulai Kelola Konten Anda Lebih Konsisten
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
+              Bergabunglah dengan ratusan kreator dan pemilik bisnis yang menghemat waktu perencanaan konten setiap minggunya.
+            </p>
+            <div className="pt-3">
+              <Link
+                href="/register"
+                className={buttonVariants({
+                  variant: "gradient",
+                  size: "lg",
+                  className: "h-11 px-8 text-sm font-semibold shadow-md",
+                })}
+              >
+                Daftar Sekarang — Gratis
+                <ArrowRight className="size-4 ml-2" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
